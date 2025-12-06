@@ -2,166 +2,131 @@
 session_start();
 include 'database.php';
 
-// Only Admin or Cleaning Staff
-if(!isset($_SESSION['ID']) || 
-   ($_SESSION['category'] != 'Maintenance and Infrastructure Department' && $_SESSION['category'] != 'Cleaning Staff')){
+if (!isset($_SESSION['ID'])) {
     header("Location: index.php");
     exit();
 }
 
-// Initialize messages
-$success = "";
-$error = "";
+$message = "";
 
-// ====== Add New Bin ======
-if(isset($_POST['add_bin'])){
-    $binNo = $_POST['binNo'];
-    $binLocation = $_POST['binLocation'];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $user_id = $_SESSION['ID'];
+    $bin_id = trim($_POST['bin_id']);
+    $bin_location = trim($_POST['bin_location']);
+    $issue_type = $_POST['issue_type'];
+    $description = $_POST['description'];
+    $method = $_POST['method']; // 'QR' or 'Manual'
 
-    // QR code folder
-    if(!file_exists('qr_codes')) mkdir('qr_codes', 0777, true);
+    // Check bin exists
+    $stmtCheck = $conn->prepare("SELECT * FROM bin WHERE binNo=?");
+    $stmtCheck->bind_param("s", $bin_id);
+    $stmtCheck->execute();
+    $resCheck = $stmtCheck->get_result();
 
-    // QR content & file
-    $qrContent = urlencode("http://localhost/ukm_trash_system/scan_bin.php?bin=$binNo");
-    $qrPath = "qr_codes/$binNo.png";
+    if ($resCheck->num_rows != 1) {
+        $message = "Invalid Bin ID. Please scan a valid QR code or enter manually.";
+    } else {
+        // Insert complaint
+        $stmt = $conn->prepare("
+            INSERT INTO complaint (studentID, binNo, type, description, method)
+            VALUES (?, ?, ?, ?, ?)
+        ");
+        $stmt->bind_param("sssss", $user_id, $bin_id, $issue_type, $description, $method);
 
-    // Generate QR using API
-    $qrImage = file_get_contents("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$qrContent");
-    if($qrImage){
-        file_put_contents($qrPath, $qrImage);
-
-        // Insert into DB
-        $stmt = $conn->prepare("INSERT INTO bin(binNo, binLocation, status, qrCode) VALUES (?, ?, 'Available', ?)");
-        $stmt->bind_param("sss", $binNo, $binLocation, $qrPath);
-
-        if($stmt->execute()){
-            header("Location: managebin.php?success=add");
-            exit();
+        if ($stmt->execute()) {
+            $message = "Complaint submitted successfully!";
         } else {
-            $error = "DB Error: ".$stmt->error;
+            $message = "Error submitting complaint. Please try again.";
         }
-    } else {
-        $error = "Failed to generate QR code.";
     }
 }
-
-// ====== Edit Bin ======
-if(isset($_POST['edit_bin'])){
-    $binNo = $_POST['edit_binNo'];
-    $binLocation = $_POST['edit_binLocation'];
-    $status = $_POST['edit_status'];
-
-    $stmt = $conn->prepare("UPDATE bin SET binLocation=?, status=? WHERE binNo=?");
-    $stmt->bind_param("sss", $binLocation, $status, $binNo);
-
-    if($stmt->execute()){
-        header("Location: managebin.php?success=edit");
-        exit();
-    } else {
-        $error = "DB Error: ".$stmt->error;
-    }
-}
-
-// ====== Delete Bin ======
-if(isset($_POST['delete'])){
-    $binNo = $_POST['delete'];
-
-    // Delete QR image
-    $result = $conn->query("SELECT qrCode FROM bin WHERE binNo='$binNo'");
-    $row = $result->fetch_assoc();
-    if($row && file_exists($row['qrCode'])) unlink($row['qrCode']);
-
-    // Delete dependent complaints first
-    $conn->query("DELETE FROM complaint WHERE binNo='$binNo'");
-
-    // Delete bin
-    $conn->query("DELETE FROM bin WHERE binNo='$binNo'");
-
-    header("Location: managebin.php?success=delete");
-    exit();
-}
-
-// ====== Fetch all bins ======
-$result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
-
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Manage Bins</title>
+    <title>Make Complaint</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {font-family: Arial; margin: 20px;}
-        h2 {color:#333;}
-        input, select {padding:8px; margin:5px; width:200px;}
-        button {padding:8px 12px; margin:5px;}
-        table {border-collapse: collapse; width:100%;}
-        th, td {border:1px solid #ccc; padding:8px; text-align:center;}
-        img {border:1px solid #ddd; border-radius:5px;}
-        .success {color:green; font-weight:bold;}
-        .error {color:red; font-weight:bold;}
+        input, select, textarea, button { padding:8px; margin:5px 0; width:100%; max-width:400px; }
+        button { background-color:#4CAF50; color:white; border:none; cursor:pointer; }
+        button:hover { background-color:#45a049; }
+        .qr-section, .manual-section { margin:15px 0; padding:15px; border:1px solid #ccc; border-radius:5px; }
+        .qr-section h3, .manual-section h3 { margin-top:0; }
     </style>
 </head>
 <body>
-<h2>Manage Bins</h2>
+<h2>Make a Complaint</h2>
 
-<?php
-if(isset($_GET['success'])){
-    switch($_GET['success']){
-        case 'add': echo "<p class='success'>Bin added successfully!</p>"; break;
-        case 'edit': echo "<p class='success'>Bin updated successfully!</p>"; break;
-        case 'delete': echo "<p class='success'>Bin deleted successfully!</p>"; break;
+<?php if($message != ""): ?>
+    <p style="color:green;"><?= $message; ?></p>
+<?php endif; ?>
+
+<!-- QR Scanner Section -->
+<div class="qr-section">
+    <h3>Scan Bin QR Code</h3>
+    <div id="qr-reader" style="width:300px;"></div>
+    <p>If QR code scan fails, please use manual entry below.</p>
+</div>
+
+<!-- Manual Entry Section -->
+<div class="manual-section">
+    <h3>Manual Bin Entry</h3>
+    <form method="POST" id="complaintForm">
+        <input type="text" id="bin_id" name="bin_id" placeholder="Bin ID" required>
+        <input type="text" id="bin_location" name="bin_location" placeholder="Bin Location" required>
+        <input type="hidden" name="method" id="method" value="Manual">
+
+        <label>Issue Type:</label>
+        <select name="issue_type" required>
+            <option value="Full">Full</option>
+            <option value="Broken">Broken</option>
+            <option value="Overflow">Overflow</option>
+        </select>
+
+        <label>Description:</label>
+        <textarea name="description" placeholder="Describe the issue" required></textarea>
+
+        <button type="submit">Submit Complaint</button>
+    </form>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+function onScanSuccess(decodedText, decodedResult) {
+    try {
+        const url = new URL(decodedText);
+        const binNo = url.searchParams.get('bin');
+        if (!binNo) throw "Invalid QR";
+
+        // Fill Bin ID
+        document.getElementById('bin_id').value = binNo;
+        document.getElementById('method').value = "QR";
+
+        // Fetch binLocation via AJAX
+        fetch('get_bin_location.php?bin=' + binNo)
+            .then(res => res.json())
+            .then(data => {
+                if(data.binLocation) {
+                    document.getElementById('bin_location').value = data.binLocation;
+                    alert("QR scanned successfully! You can now submit.");
+                } else {
+                    alert("Bin not found. Please enter manually.");
+                }
+            })
+            .catch(() => {
+                alert("Error retrieving bin details. Please enter manually.");
+            });
+
+    } catch(err) {
+        alert("Invalid QR code. Please enter manually.");
     }
 }
-if($error) echo "<p class='error'>$error</p>";
-?>
 
-<!-- ADD BIN FORM -->
-<h3>Add New Bin</h3>
-<form method="POST">
-    <input type="text" name="binNo" placeholder="Bin No" required>
-    <input type="text" name="binLocation" placeholder="Bin Location" required>
-    <button type="submit" name="add_bin">Add Bin</button>
-</form>
+function onScanError(errorMessage) { console.warn(errorMessage); }
 
-<hr>
-
-<!-- BIN LIST -->
-<h3>All Bins</h3>
-<table>
-<tr>
-    <th>Bin No</th>
-    <th>Location</th>
-    <th>Status</th>
-    <th>QR Code</th>
-    <th>Actions</th>
-</tr>
-
-<?php while($row = $result->fetch_assoc()){ ?>
-<tr>
-    <form method="POST">
-        <td><?= $row['binNo']; ?>
-            <input type="hidden" name="edit_binNo" value="<?= $row['binNo']; ?>">
-        </td>
-        <td><input type="text" name="edit_binLocation" value="<?= $row['binLocation']; ?>"></td>
-        <td>
-            <select name="edit_status">
-                <option value="Available" <?= $row['status']=='Available'?'selected':'';?>>Available</option>
-                <option value="Maintenance" <?= $row['status']=='Maintenance'?'selected':'';?>>Maintenance</option>
-            </select>
-        </td>
-        <td><img src="<?= $row['qrCode']; ?>" width="80"></td>
-        <td>
-            <button type="submit" name="edit_bin">Update</button>
-    </form>
-    <form method="POST" style="display:inline;">
-        <input type="hidden" name="delete" value="<?= $row['binNo']; ?>">
-        <button type="submit">Delete</button>
-    </form>
-        </td>
-</tr>
-<?php } ?>
-</table>
-
+var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+html5QrcodeScanner.render(onScanSuccess, onScanError);
+</script>
 </body>
 </html>
-

@@ -24,6 +24,9 @@
 
 <?php include 'dashboard.php'; ?>  <!
 
+<!-- Complaint button -->
+<a href="making_complaint.php" class="button">Make a Complaint</a>
+
 </body>
 </html>
 
