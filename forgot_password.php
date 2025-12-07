@@ -1,35 +1,71 @@
 <?php
+session_start();
 include 'database.php';
 
-$message = "";  // avoid undefined variable
+// ✅ PHPMailer includes
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require 'PHPMailer/src/Exception.php';
+require 'PHPMailer/src/PHPMailer.php';
+require 'PHPMailer/src/SMTP.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$error = "";
+$success = "";
+
+if(isset($_POST['send_code'])){
     $email = trim($_POST['email']);
 
-    // Check user exists
-    $stmt = $conn->prepare("SELECT ID, name FROM user WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Check if email exists
+    $check = $conn->prepare("SELECT * FROM user WHERE email=?");
+    $check->bind_param("s", $email);
+    $check->execute();
+    $result = $check->get_result();
 
-    // Generic message (security)
-    $message = "If your email exists in our system, you will receive a reset link.";
-
-    if ($result->num_rows == 1) {
+    if($result->num_rows > 0){
         $user = $result->fetch_assoc();
 
-        // 1) Generate token
-        $token = bin2hex(random_bytes(32));
-        $expires = date("Y-m-d H:i:s", strtotime("+15 minutes"));
+        // Generate 6-digit code
+        $code = rand(100000, 999999);
+        $expiry = date("Y-m-d H:i:s", strtotime("+10 minutes"));
 
-        // 2) Store token in database
-        $stmt2 = $conn->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)");
-        $stmt2->bind_param("sss", $email, $token, $expires);
-        $stmt2->execute();
+        // Save code and expiry in DB
+        $update = $conn->prepare("UPDATE user SET reset_code=?, reset_expiry=? WHERE email=?");
+        $update->bind_param("sss", $code, $expiry, $email);
+        $update->execute();
 
-        // 3) For testing only: display the reset link
-        $resetLink = "http://localhost/trash_system/reset_forgotpassword.php?token=" . $token;
-        $message = "Test Reset Link (click to reset password): <a href='$resetLink'>$resetLink</a>";
+        // ✅ Send email using PHPMailer
+        $mail = new PHPMailer(true);
+        try {
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'nahvindren190804@gmail.com'; // your Gmail
+            $mail->Password   = 'fbfr ajjz lwth znrc'; // your App Password
+            $mail->SMTPSecure = 'tls';
+            $mail->Port       = 587;
+
+            // Recipients
+            $mail->setFrom('nahvindren190804@gmail.com', 'UKM Trash System');
+            $mail->addAddress($email, $user['name']);
+
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = 'Password Reset Code';
+            $mail->Body    = "Hello ".$user['name']."!<br><br>Your password reset code is: <b>$code</b><br>It will expire in 10 minutes.";
+
+            $mail->send();
+            $success = "Reset code sent to your email! Please check your inbox.";
+            // Redirect to verify code page
+            header("Location: verify_code.php?email=$email");
+            exit();
+
+        } catch (Exception $e) {
+            $error = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        }
+
+    } else {
+        $error = "This email is not registered!";
     }
 }
 ?>
@@ -38,21 +74,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html>
 <head>
     <title>Forgot Password</title>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>Forgot Password</h2>
+<h2>Forgot Password</h2>
 
-    <!-- Display message -->
-    <?php if ($message !== ""): ?>
-        <p style="color:blue;"><?php echo $message; ?></p>
-    <?php endif; ?>
+<?php
+if($error) echo "<p style='color:red;'>$error</p>";
+if($success) echo "<p style='color:green;'>$success</p>";
+?>
 
-    <form method="POST">
-        <input type="email" name="email" placeholder="Enter your email" required><br>
-        <button type="submit">Send Reset Link</button>
-    </form>
+<form method="POST">
+    <input type="email" name="email" placeholder="Enter your email" required>
+    <br><br>
+    <button type="submit" name="send_code">Send Reset Code</button>
+</form>
 
-    <p><a href="index.php">Back to login</a></p>
 </body>
 </html>
