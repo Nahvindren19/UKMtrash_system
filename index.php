@@ -2,54 +2,60 @@
 session_start();
 include 'database.php';
 
+$error = ""; // optional, to show errors later
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $id = $_POST['id'];
-    $password = $_POST['password'];
+    // Check if 'id' and 'password' exist in POST
+    $id = isset($_POST['id']) ? $_POST['id'] : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
 
-    $stmt = $conn->prepare("SELECT u.*, c.change_password 
-                            FROM user u 
-                            LEFT JOIN CleaningStaff c ON u.ID = c.ID 
-                            WHERE u.ID = ?");
-
-    $stmt->bind_param("s", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-
-        if (password_verify($password, $row['password'])) {
-            $_SESSION['ID'] = $row['ID'];
-            $_SESSION['name'] = $row['name']; 
-            $_SESSION['category'] = $row['category'];
-
-            switch ($row['category']) {
-                case 'Cleaning Staff':
-                    if (isset($row['change_password']) && $row['change_password'] == 0) {
-                        header("Location: reset_password.php");
-                        exit();
-                    } else {
-                        header("Location: cleaner_dashboard.php");
-                        exit();
-                    }
-
-                case 'Student':
-                    header("Location: student_dashboard.php");
-                    exit();
-
-                case 'Maintenance and Infrastructure Department':
-                    header("Location: admin_dashboard.php");
-                    exit();
-
-                default:
-                    $error = "Unknown user category!";
-            }
-
-        } else {
-            $error = "Invalid password!";
-        }
+    if (empty($id) || empty($password)) {
+        $error = "Please enter ID and password!";
     } else {
-        $error = "User not found!";
+        $stmt = $conn->prepare("SELECT u.*, c.change_password 
+                                FROM user u 
+                                LEFT JOIN CleaningStaff c ON u.ID = c.ID 
+                                WHERE u.ID = ?");
+        $stmt->bind_param("s", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+
+            if (password_verify($password, $row['password'])) {
+                $_SESSION['ID'] = $row['ID'];
+                $_SESSION['name'] = $row['name']; 
+                $_SESSION['category'] = $row['category'];
+
+                switch ($row['category']) {
+                    case 'Cleaning Staff':
+                        if (isset($row['change_password']) && $row['change_password'] == 0) {
+                            header("Location: reset_password.php");
+                            exit();
+                        } else {
+                            header("Location: cleaner_dashboard.php");
+                            exit();
+                        }
+
+                    case 'Student':
+                        header("Location: student_dashboard.php");
+                        exit();
+
+                    case 'Maintenance and Infrastructure Department':
+                        header("Location: admin_dashboard.php");
+                        exit();
+
+                    default:
+                        $error = "Unknown user category!";
+                }
+
+            } else {
+                $error = "Invalid password!";
+            }
+        } else {
+            $error = "User not found!";
+        }
     }
 }
 ?>
