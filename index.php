@@ -77,7 +77,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'success') {
     <button type="submit">Login</button>
 </form>
 
-<p><a href="forgot_password.php">Forgot your password?</a></p>
+<p><a href="forgot_password.php">Forgot your password ke?</a></p>
 <p>Don't have an account? <a href="register.php">Register as Student</a></p>
 
 <?php
