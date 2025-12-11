@@ -203,44 +203,6 @@ while($row = $notifResult->fetch_assoc()){
             font-size: 1.1rem;
         }
 
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .stat-card {
-            background: var(--card);
-            padding: 25px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-light);
-            text-align: center;
-            transition: var(--transition);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow);
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 10px;
-            line-height: 1;
-        }
-
-        .stat-label {
-            color: var(--muted);
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
         /* Message Alerts */
         .alert {
             padding: 20px;
@@ -256,99 +218,6 @@ while($row = $notifResult->fetch_assoc()){
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        .alert-success {
-            background: var(--success);
-            color: var(--success-text);
-            border-left: 4px solid var(--success-text);
-        }
-
-        .alert-error {
-            background: var(--error);
-            color: var(--error-text);
-            border-left: 4px solid var(--error-text);
-        }
-
-        .alert i {
-            font-size: 24px;
-        }
-
-        /* Cleaner Name Display */
-        .cleaner-info {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: rgba(127, 196, 155, 0.1);
-            border-radius: 8px;
-            font-size: 13px;
-        }
-
-        /* Zone Badge */
-        .zone-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            background: rgba(52, 152, 219, 0.1);
-            color: var(--info-text);
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Table Scroll Container */
-        .table-scroll-container {
-            overflow-x: auto;
-            border-radius: var(--radius);
-            margin-bottom: 40px;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--muted);
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            color: var(--accent-2);
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        /* Filter Section */
-        .filter-section {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            background: var(--card);
-            border: 2px solid rgba(127, 196, 155, 0.2);
-            border-radius: 8px;
-            color: var(--muted);
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .filter-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-
-        .filter-btn:hover {
-            border-color: var(--accent);
-            color: var(--text);
         }
 
         /* Responsive Design */
@@ -396,6 +265,32 @@ while($row = $notifResult->fetch_assoc()){
                 min-width: 200px;
             }
         }
+
+        /* Temporary table style */
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #ccc;
+        }
+
+        table td.description-column {
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -430,65 +325,66 @@ while($row = $notifResult->fetch_assoc()){
                 </div>
             </div>
 
-    <!-- Notifications -->
-    <h3>Notifications (<span id="unreadCount"><?= $unreadCount ?></span>)</h3>
-    <div id="notifications" style="border:1px solid #ccc; padding:10px; max-height:300px; overflow-y:auto; background-color:#fff;">
-        <?php foreach($notifications as $n): ?>
-            <div class="notification <?= $n['is_read']==0?'unread':'' ?>" data-id="<?= $n['id'] ?>">
-                <?= htmlspecialchars($n['message']) ?><br>
-                <small><?= $n['created_at'] ?></small>
-                <?php if($n['is_read']==0): ?>
-                    <br><span class="mark-read" style="cursor:pointer;color:blue;text-decoration:underline;font-size:12px;">Mark as read</span>
-                <?php endif; ?>
+            <!-- Notifications -->
+            <h3>Notifications (<span id="unreadCount"><?= $unreadCount ?></span>)</h3>
+            <div id="notifications" style="border:1px solid #ccc; padding:10px; max-height:300px; overflow-y:auto; background-color:#fff;">
+                <?php foreach($notifications as $n): ?>
+                    <div class="notification <?= $n['is_read']==0?'unread':'' ?>" data-id="<?= $n['id'] ?>">
+                        <?= htmlspecialchars($n['message']) ?><br>
+                        <small><?= $n['created_at'] ?></small>
+                        <?php if($n['is_read']==0): ?>
+                            <br><span class="mark-read" style="cursor:pointer;color:blue;text-decoration:underline;font-size:12px;">Mark as read</span>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
-    </div>
 
-    <!-- Regular Tasks -->
-    <h3>Regular Tasks</h3>
-    <table border="1" cellpadding="5">
-    <tr><th>TaskID</th><th>Location</th><th>Date</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr>
-    <?php while($t = $tasks->fetch_assoc()){ ?>
-    <tr>
-    <td><?= $t['taskID']; ?></td>
-    <td><?= $t['location']; ?></td>
-    <td><?= $t['date']; ?></td>
-    <td><?= $t['start_time']; ?></td>
-    <td><?= $t['end_time']; ?></td>
-    <td><?= $t['status']; ?></td>
-    <td>
-    <form method="POST" action="mark_complete.php">
-    <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
-    <button type="submit">Mark Completed</button>
-    </form>
-    </td>
-    </tr>
-    <?php } ?>
-    </table>
+            <!-- Regular Tasks -->
+            <h3>Regular Tasks</h3>
+            <table border="1" cellpadding="5">
+            <tr><th>TaskID</th><th>Location</th><th>Date</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr>
+            <?php while($t = $tasks->fetch_assoc()){ ?>
+            <tr>
+            <td><?= $t['taskID']; ?></td>
+            <td><?= $t['location']; ?></td>
+            <td><?= $t['date']; ?></td>
+            <td><?= $t['start_time']; ?></td>
+            <td><?= $t['end_time']; ?></td>
+            <td><?= $t['status']; ?></td>
+            <td>
+            <form method="POST" action="mark_complete.php">
+            <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
+            <button type="submit">Mark Completed</button>
+            </form>
+            </td>
+            </tr>
+            <?php } ?>
+            </table>
 
-    <!-- Assigned Complaints -->
-    <h3>Assigned Complaints</h3>
-    <table border="1" cellpadding="5">
-    <tr><th>ID</th><th>Bin</th><th>Type</th><th>Description</th><th>Date</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr>
-    <?php while($c = $complaints->fetch_assoc()){ ?>
-    <tr>
-    <td><?= $c['complaintID']; ?></td>
-    <td><?= $c['binNo']; ?></td>
-    <td><?= $c['type']; ?></td>
-    <td><?= htmlspecialchars($c['description']); ?></td>
-    <td><?= $c['date']; ?></td>
-    <td><?= $c['start_time']; ?></td>
-    <td><?= $c['end_time']; ?></td>
-    <td><?= $c['status']; ?></td>
-    <td>
-    <form method="POST" action="mark_complete.php">
-    <input type="hidden" name="complaintID" value="<?= $c['complaintID']; ?>">
-    <button type="submit">Mark Completed</button>
-    </form>
-    </td>
-    </tr>
-    <?php } ?>
-    </table>
+            <!-- Assigned Complaints -->
+            <h3>Assigned Complaints</h3>
+            <table border="1" cellpadding="5">
+            <tr><th>ID</th><th>Bin</th><th>Type</th><th>Description</th><th>Date</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr>
+            <?php while($c = $complaints->fetch_assoc()){ ?>
+            <tr>
+            <td><?= $c['complaintID']; ?></td>
+            <td><?= $c['binNo']; ?></td>
+            <td><?= $c['type']; ?></td>
+            <td><?= htmlspecialchars($c['description']); ?></td>
+            <td><?= $c['date']; ?></td>
+            <td><?= $c['start_time']; ?></td>
+            <td><?= $c['end_time']; ?></td>
+            <td><?= $c['status']; ?></td>
+            <td>
+            <form method="POST" action="mark_complete.php">
+            <input type="hidden" name="complaintID" value="<?= $c['complaintID']; ?>">
+            <button type="submit">Mark Completed</button>
+            </form>
+            </td>
+            </tr>
+            <?php } ?>
+            </table>
+    </main>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
