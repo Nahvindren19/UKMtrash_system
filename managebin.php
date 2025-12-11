@@ -598,7 +598,7 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
                     <li><a href="cleaner_dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
                     <li><a href="managebin.php" class="active"><i class="fas fa-trash-alt"></i> Manage Bins</a></li>
                 <?php endif; ?>
-                <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
 

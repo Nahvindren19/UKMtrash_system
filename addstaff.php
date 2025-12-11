@@ -441,7 +441,7 @@ if(isset($_POST['add_staff'])){
                 <li><a href="#"><i class="fas fa-chart-line"></i> Analytics</a></li>
                 <li><a href="#"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
                 <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
 
