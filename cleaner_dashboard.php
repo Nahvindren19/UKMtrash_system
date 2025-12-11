@@ -13,8 +13,8 @@ $cleanerID = $_SESSION['ID'];
 // Fetch assigned tasks
 $tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY date,start_time");
 
-// Fetch assigned complaints
-$complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' AND status IN ('Assigned','In Progress') ORDER BY date,start_time");
+// Fetch assigned complaints (including resolved ones for history)
+$complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY status, date DESC, start_time");
 
 // Fetch notifications
 $stmt = $conn->prepare("SELECT * FROM notifications WHERE userID=? ORDER BY is_read ASC, created_at DESC");
@@ -31,7 +31,7 @@ while($row = $notifResult->fetch_assoc()){
 
 // Fetch statistics for dashboard
 $taskCount = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending')")->fetch_assoc()['count'];
-$complaintCount = $conn->query("SELECT COUNT(*) as count FROM complaint WHERE assigned_to='$cleanerID' AND status IN ('Assigned','In Progress')")->fetch_assoc()['count'];
+$activeComplaintCount = $conn->query("SELECT COUNT(*) as count FROM complaint WHERE assigned_to='$cleanerID' AND status IN ('Assigned','In Progress')")->fetch_assoc()['count'];
 $today = date('Y-m-d');
 $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$cleanerID' AND date='$today' AND status IN ('Scheduled','Pending')")->fetch_assoc()['count'];
 
@@ -214,7 +214,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 25px;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         .stat-card {
@@ -225,6 +225,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .stat-card:hover {
@@ -282,14 +283,18 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
 
         /* Tasks Section */
         .tasks-section {
-            margin-top: 40px;
+            margin-bottom: 50px;
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-light);
         }
 
         .section-header h3 {
@@ -344,7 +349,98 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             background: #27ae60;
         }
 
-        /* Tables */
+        /* Task Cards */
+        .task-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .task-card {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(127, 196, 155, 0.15);
+        }
+
+        .task-card-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .task-card-header h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .task-card-header .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .task-card-header .toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .task-card-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .task-card-content.expanded {
+            padding: 20px;
+            max-height: 1000px;
+        }
+
+        .task-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-item label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .detail-item span {
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            border-top: 1px solid rgba(127, 196, 155, 0.1);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        /* Complaints Table */
         .table-container {
             background: var(--card);
             border-radius: var(--radius-lg);
@@ -356,7 +452,6 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px;
         }
 
         thead {
@@ -364,7 +459,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         }
 
         th {
-            padding: 20px;
+            padding: 18px 20px;
             text-align: left;
             color: white;
             font-weight: 600;
@@ -383,9 +478,10 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         }
 
         td {
-            padding: 18px 20px;
+            padding: 16px 20px;
             color: var(--text);
             font-size: 14px;
+            vertical-align: top;
         }
 
         .status-badge {
@@ -414,6 +510,16 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         .status-in-progress {
             background: rgba(155, 89, 182, 0.1);
             color: #9b59b6;
+        }
+
+        .status-resolved {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--success-text);
+        }
+
+        .status-assigned {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--info-text);
         }
 
         /* Action Buttons */
@@ -509,6 +615,9 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+            .task-cards {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
         }
 
         @media (max-width: 768px) {
@@ -527,6 +636,9 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+            .task-cards {
+                grid-template-columns: 1fr;
+            }
             .header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -540,7 +652,6 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                 justify-content: center;
             }
             table {
-                min-width: 100%;
                 font-size: 13px;
             }
             th, td {
@@ -561,6 +672,41 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             margin-bottom: 20px;
             color: var(--accent-2);
         }
+
+        /* Scroll to section */
+        .section-anchor {
+            scroll-margin-top: 30px;
+        }
+
+        /* Filter buttons */
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: var(--card);
+            border: 1px solid rgba(127, 196, 155, 0.2);
+            border-radius: 20px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-btn:hover {
+            background: rgba(127, 196, 155, 0.1);
+            color: var(--text);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -576,9 +722,9 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             </div>
 
             <ul class="nav-links">
-                <li><a href="cleaner_dashboard.php" class="active"><i class="fas fa-tasks"></i> Scheduled Tasks</a></li>
-                <li><a href="#"><i class="fas fa-exclamation-circle"></i> Assigned Complaints</a></li>
-                <li><a href="#"><i class="fas fa-check-circle"></i> Update Completion</a></li>
+                <li><a href="#notifications-section"><i class="fas fa-bell"></i> Notifications</a></li>
+                <li><a href="#scheduled-tasks-section"><i class="fas fa-tasks"></i> Scheduled Tasks</a></li>
+                <li><a href="#assigned-complaints-section"><i class="fas fa-exclamation-circle"></i> Assigned Complaints</a></li>
                 <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
@@ -589,19 +735,13 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             <div class="header">
                 <div class="welcome-section">
                     <h2>Welcome, <?php echo $_SESSION['name']; ?>!</h2>
-                    <p>View your scheduled tasks and assigned complaints</p>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn btn-success" onclick="markAllComplete()">
-                        <i class="fas fa-check-double"></i> Mark All Today's Tasks Complete
-                    </button>
+                    <p>View your assigned tasks and complaints</p>
                 </div>
             </div>
 
             <!-- Stats Overview -->
             <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card" onclick="scrollToSection('scheduled-tasks-section')">
                     <div class="stat-icon">
                         <i class="fas fa-tasks"></i>
                     </div>
@@ -611,19 +751,19 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                             <?php echo $taskCount; ?>
                         </div>
                         <div class="change">
-                            <i class="fas fa-arrow-up"></i> Tasks assigned to you
+                            <i class="fas fa-calendar"></i> Click to view tasks
                         </div>
                     </div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card" onclick="scrollToSection('assigned-complaints-section')">
                     <div class="stat-icon">
                         <i class="fas fa-exclamation-circle"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>Assigned Complaints</h3>
+                        <h3>Active Complaints</h3>
                         <div class="value">
-                            <?php echo $complaintCount; ?>
+                            <?php echo $activeComplaintCount; ?>
                         </div>
                         <div class="change">
                             <i class="fas fa-clock"></i> Requires attention
@@ -631,7 +771,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                     </div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card" onclick="scrollToSection('notifications-section')">
                     <div class="stat-icon">
                         <i class="fas fa-bell"></i>
                     </div>
@@ -649,210 +789,221 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                         <i class="fas fa-calendar-day"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>Today's Schedule</h3>
+                        <h3>Today's Tasks</h3>
                         <div class="value">
                             <?php echo $todayTasks; ?>
                         </div>
                         <div class="change">
-                            <i class="fas fa-calendar"></i> Tasks for today
+                            <i class="fas fa-list-check"></i> To complete today
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Notifications -->
-            <div class="section-header">
-                <h3>Notifications (<span id="unreadCount"><?= $unreadCount ?></span>)</h3>
-                <div class="section-actions">
-                    <button class="btn btn-outline" onclick="markAllAsRead()">
-                        <i class="fas fa-check-double"></i> Mark All Read
-                    </button>
+            <!-- Notifications Section -->
+            <section id="notifications-section" class="section-anchor">
+                <div class="section-header">
+                    <h3><i class="fas fa-bell"></i> Notifications (<span id="unreadCount"><?= $unreadCount ?></span>)</h3>
+                    <div class="section-actions">
+                        <button class="btn btn-outline" onclick="markAllAsRead()">
+                            <i class="fas fa-check-double"></i> Mark All Read
+                        </button>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="table-container">
-                <div id="notifications">
-                    <?php if(empty($notifications)): ?>
-                        <div class="no-data">
-                            <i class="fas fa-bell-slash"></i>
-                            <p>No notifications found</p>
+                
+                <div class="table-container">
+                    <div id="notifications">
+                        <?php if(empty($notifications)): ?>
+                            <div class="no-data">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>No notifications found</p>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach($notifications as $n): ?>
+                                <div class="notification <?= $n['is_read']==0?'unread':'' ?>" data-id="<?= $n['id'] ?>">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div>
+                                            <strong><?= htmlspecialchars($n['message']) ?></strong>
+                                            <br>
+                                            <small style="color: var(--muted);"><?= $n['created_at'] ?></small>
+                                        </div>
+                                        <?php if($n['is_read']==0): ?>
+                                            <span class="mark-read" style="cursor:pointer;color:var(--info-text);text-decoration:underline;font-size:12px;margin-left:10px;">
+                                                Mark as read
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scheduled Tasks Section -->
+            <section id="scheduled-tasks-section" class="section-anchor tasks-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-tasks"></i> Scheduled Tasks</h3>
+                    <div class="section-actions">
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" onclick="filterTasks('today')">Today</button>
+                            <button class="filter-btn" onclick="filterTasks('upcoming')">Upcoming</button>
+                            <button class="filter-btn" onclick="filterTasks('all')">All</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="task-cards" id="taskCards">
+                    <?php 
+                    // Reset task pointer
+                    $tasks->data_seek(0);
+                    if($tasks->num_rows == 0): ?>
+                        <div class="no-data" style="grid-column: 1/-1;">
+                            <i class="fas fa-tasks"></i>
+                            <p>No scheduled tasks assigned</p>
+                            <small>Tasks will appear here once assigned by management staff</small>
                         </div>
                     <?php else: ?>
-                        <?php foreach($notifications as $n): ?>
-                            <div class="notification <?= $n['is_read']==0?'unread':'' ?>" data-id="<?= $n['id'] ?>">
-                                <div style="display: flex; justify-content: space-between; align-items: start;">
-                                    <div>
-                                        <strong><?= htmlspecialchars($n['message']) ?></strong>
-                                        <br>
-                                        <small style="color: var(--muted);"><?= $n['created_at'] ?></small>
-                                    </div>
-                                    <?php if($n['is_read']==0): ?>
-                                        <span class="mark-read" style="cursor:pointer;color:var(--info-text);text-decoration:underline;font-size:12px;margin-left:10px;">
-                                            Mark as read
-                                        </span>
-                                    <?php endif; ?>
+                        <?php while($t = $tasks->fetch_assoc()): 
+                            $taskDate = $t['date'];
+                            $isToday = ($taskDate == $today);
+                            $taskClass = $isToday ? 'today-task' : '';
+                        ?>
+                        <div class="task-card <?= $taskClass ?>" data-date="<?= $taskDate ?>">
+                            <div class="task-card-header" onclick="toggleTaskCard(this)">
+                                <h4>
+                                    <i class="fas fa-map-marker-alt"></i> <?= $t['location']; ?>
+                                    <small style="display: block; font-size: 12px; opacity: 0.9;">Task ID: <?= $t['taskID']; ?></small>
+                                </h4>
+                                <div class="toggle-icon">
+                                    <i class="fas fa-chevron-down"></i>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
+                            <div class="task-card-content">
+                                <div class="task-details">
+                                    <div class="detail-item">
+                                        <label><i class="far fa-calendar"></i> Date</label>
+                                        <span><?= date('d/m/Y', strtotime($taskDate)); ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label><i class="far fa-clock"></i> Start Time</label>
+                                        <span><?= date('h:i A', strtotime($t['start_time'])); ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label><i class="far fa-clock"></i> End Time</label>
+                                        <span><?= date('h:i A', strtotime($t['end_time'])); ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label><i class="fas fa-info-circle"></i> Status</label>
+                                        <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $t['status'])) ?>">
+                                            <?= $t['status']; ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="task-actions">
+                                    <form method="POST" action="mark_complete.php" style="display: inline;">
+                                        <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
+                                        <button type="submit" class="action-btn action-complete">
+                                            <i class="fas fa-check"></i> Mark as Complete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endwhile; ?>
                     <?php endif; ?>
                 </div>
-            </div>
+            </section>
 
-            <!-- Scheduled Tasks (From assigntask.php) -->
-            <div class="section-header">
-                <h3>Scheduled Tasks</h3>
-                <div class="section-actions">
-                    <div class="btn-group">
-                        <button class="btn btn-outline" onclick="filterTasks('today')">
-                            <i class="fas fa-calendar-day"></i> Today
-                        </button>
-                        <button class="btn btn-outline" onclick="filterTasks('upcoming')">
-                            <i class="fas fa-calendar-week"></i> Upcoming
-                        </button>
-                        <button class="btn btn-outline" onclick="filterTasks('all')">
-                            <i class="fas fa-calendar-alt"></i> All
-                        </button>
+            <!-- Assigned Complaints Section -->
+            <section id="assigned-complaints-section" class="section-anchor">
+                <div class="section-header">
+                    <h3><i class="fas fa-exclamation-circle"></i> Assigned Complaints</h3>
+                    <div class="section-actions">
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" onclick="filterComplaints('active')">Active</button>
+                            <button class="filter-btn" onclick="filterComplaints('today')">Today</button>
+                            <button class="filter-btn" onclick="filterComplaints('all')">All</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="table-container">
-                <?php if($tasks->num_rows == 0): ?>
-                    <div class="no-data">
-                        <i class="fas fa-tasks"></i>
-                        <p>No scheduled tasks assigned</p>
-                        <small>Tasks will appear here once assigned by management staff</small>
-                    </div>
-                <?php else: ?>
-                    <table id="tasksTable">
-                        <thead>
-                            <tr>
-                                <th>TaskID</th>
-                                <th>Location</th>
-                                <th>Date</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while($t = $tasks->fetch_assoc()): 
-                                $taskDate = $t['date'];
-                                $isToday = ($taskDate == $today);
-                                $taskClass = $isToday ? 'today-task' : '';
-                            ?>
-                            <tr class="task-row <?= $taskClass ?>" data-date="<?= $taskDate ?>">
-                                <td><?= $t['taskID']; ?></td>
-                                <td><?= $t['location']; ?></td>
-                                <td><?= date('d/m/Y', strtotime($taskDate)); ?></td>
-                                <td><?= date('h:i A', strtotime($t['start_time'])); ?></td>
-                                <td><?= date('h:i A', strtotime($t['end_time'])); ?></td>
-                                <td>
-                                    <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $t['status'])) ?>">
-                                        <?= $t['status']; ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <form method="POST" action="mark_complete.php" style="display: inline;">
-                                            <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
-                                            <button type="submit" class="action-btn action-complete">
-                                                <i class="fas fa-check"></i> Complete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
-
-            <!-- Assigned Complaints (From assign_complaints.php) -->
-            <div class="section-header">
-                <h3>Assigned Complaints</h3>
-                <div class="section-actions">
-                    <div class="btn-group">
-                        <button class="btn btn-outline" onclick="filterComplaints('today')">
-                            <i class="fas fa-calendar-day"></i> Today
-                        </button>
-                        <button class="btn btn-outline" onclick="filterComplaints('urgent')">
-                            <i class="fas fa-exclamation-triangle"></i> Urgent
-                        </button>
-                        <button class="btn btn-outline" onclick="filterComplaints('all')">
-                            <i class="fas fa-list"></i> All
-                        </button>
-                    </div>
+                
+                <div class="table-container">
+                    <?php 
+                    // Reset pointer for complaints
+                    $complaints->data_seek(0);
+                    if($complaints->num_rows == 0): ?>
+                        <div class="no-data">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>No complaints assigned</p>
+                            <small>Complaints will appear here once assigned by management staff</small>
+                        </div>
+                    <?php else: ?>
+                        <table id="complaintsTable">
+                            <thead>
+                                <tr>
+                                    <th>Complaint ID</th>
+                                    <th>Bin No</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while($c = $complaints->fetch_assoc()): 
+                                    $complaintDate = $c['date'];
+                                    $isActive = ($c['status'] == 'Assigned' || $c['status'] == 'In Progress');
+                                    $isToday = ($complaintDate == $today);
+                                    $complaintClass = '';
+                                    if (!$isActive) $complaintClass = 'resolved';
+                                ?>
+                                <tr class="complaint-row <?= $complaintClass ?>" data-status="<?= $c['status'] ?>" data-date="<?= $complaintDate ?>">
+                                    <td>C-<?= $c['complaintID']; ?></td>
+                                    <td><?= $c['binNo']; ?></td>
+                                    <td><?= $c['type']; ?></td>
+                                    <td style="max-width: 200px;"><?= htmlspecialchars($c['description']); ?></td>
+                                    <td><?= date('d/m/Y', strtotime($complaintDate)); ?></td>
+                                    <td>
+                                        <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $c['status'])) ?>">
+                                            <?= $c['status']; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if($isActive): ?>
+                                        <div class="action-buttons">
+                                            <form method="POST" action="mark_complete.php" style="display: inline;">
+                                                <input type="hidden" name="complaintID" value="<?= $c['complaintID']; ?>">
+                                                <button type="submit" class="action-btn action-complete">
+                                                    <i class="fas fa-check"></i> Resolve
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <?php else: ?>
+                                        <span style="color: var(--muted); font-size: 12px;">Resolved</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
                 </div>
-            </div>
-            
-            <div class="table-container">
-                <?php 
-                // Reset pointer for complaints since we already fetched them
-                $complaints->data_seek(0);
-                if($complaints->num_rows == 0): ?>
-                    <div class="no-data">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>No complaints assigned</p>
-                        <small>Complaints will appear here once assigned by management staff</small>
-                    </div>
-                <?php else: ?>
-                    <table id="complaintsTable">
-                        <thead>
-                            <tr>
-                                <th>Complaint ID</th>
-                                <th>Bin No</th>
-                                <th>Type</th>
-                                <th>Description</th>
-                                <th>Date Reported</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while($c = $complaints->fetch_assoc()): 
-                                $complaintDate = $c['date'];
-                                $isUrgent = ($c['type'] == 'Urgent' || $c['type'] == 'Emergency');
-                                $complaintClass = $isUrgent ? 'urgent-complaint' : '';
-                            ?>
-                            <tr class="complaint-row <?= $complaintClass ?>" data-type="<?= $c['type'] ?>" data-date="<?= $complaintDate ?>">
-                                <td>C-<?= $c['complaintID']; ?></td>
-                                <td><?= $c['binNo']; ?></td>
-                                <td>
-                                    <span class="status-badge <?= $isUrgent ? 'status-in-progress' : 'status-pending' ?>">
-                                        <?= $c['type']; ?>
-                                    </span>
-                                </td>
-                                <td style="max-width: 200px;"><?= htmlspecialchars($c['description']); ?></td>
-                                <td><?= date('d/m/Y', strtotime($complaintDate)); ?></td>
-                                <td>
-                                    <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $c['status'])) ?>">
-                                        <?= $c['status']; ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <form method="POST" action="mark_complete.php" style="display: inline;">
-                                            <input type="hidden" name="complaintID" value="<?= $c['complaintID']; ?>">
-                                            <button type="submit" class="action-btn action-complete">
-                                                <i class="fas fa-check"></i> Resolve
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
+            </section>
         </main>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+    // Scroll to section
+    function scrollToSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
     // Mark notification as read
     function markAsRead(id){
         $.post('mark_read.php', {notificationID: id}, function(){
@@ -899,7 +1050,6 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                     </div>
                 `);
 
-                // Add click event for mark as read
                 notificationDiv.find('.mark-read').click(function() {
                     markAsRead(n.id);
                 });
@@ -909,13 +1059,28 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         });
     }
 
+    // Toggle task card expand/collapse
+    function toggleTaskCard(header) {
+        const card = header.closest('.task-card');
+        const content = card.querySelector('.task-card-content');
+        const icon = header.querySelector('.toggle-icon');
+        
+        content.classList.toggle('expanded');
+        icon.classList.toggle('expanded');
+    }
+
     // Filter tasks by date
     function filterTasks(filterType) {
         const today = '<?= $today ?>';
-        const rows = document.querySelectorAll('.task-row');
+        const cards = document.querySelectorAll('.task-card');
+        const filterBtns = document.querySelectorAll('#scheduled-tasks-section .filter-btn');
         
-        rows.forEach(row => {
-            const taskDate = row.getAttribute('data-date');
+        // Update active button
+        filterBtns.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        cards.forEach(card => {
+            const taskDate = card.getAttribute('data-date');
             let show = true;
             
             switch(filterType) {
@@ -930,7 +1095,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                     show = true;
             }
             
-            row.style.display = show ? '' : 'none';
+            card.style.display = show ? '' : 'none';
         });
     }
 
@@ -938,18 +1103,23 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
     function filterComplaints(filterType) {
         const today = '<?= $today ?>';
         const rows = document.querySelectorAll('.complaint-row');
+        const filterBtns = document.querySelectorAll('#assigned-complaints-section .filter-btn');
+        
+        // Update active button
+        filterBtns.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
         
         rows.forEach(row => {
-            const complaintType = row.getAttribute('data-type');
+            const complaintStatus = row.getAttribute('data-status');
             const complaintDate = row.getAttribute('data-date');
             let show = true;
             
             switch(filterType) {
+                case 'active':
+                    show = (complaintStatus === 'Assigned' || complaintStatus === 'In Progress');
+                    break;
                 case 'today':
                     show = (complaintDate === today);
-                    break;
-                case 'urgent':
-                    show = (complaintType === 'Urgent' || complaintType === 'Emergency');
                     break;
                 case 'all':
                 default:
@@ -960,22 +1130,17 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         });
     }
 
-    // Mark all today's tasks as complete
-    function markAllComplete() {
-        if(confirm('Are you sure you want to mark all today\'s tasks as complete?')) {
-            $.post('mark_all_complete.php', {
-                cleanerID: '<?= $cleanerID ?>',
-                date: '<?= $today ?>'
-            }, function(response) {
-                if(response.success) {
-                    alert('All today\'s tasks marked as complete!');
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            }, 'json');
-        }
-    }
+    // Handle sidebar navigation clicks
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href.startsWith('#')) {
+                e.preventDefault();
+                const sectionId = href.substring(1);
+                scrollToSection(sectionId);
+            }
+        });
+    });
 
     // Auto-refresh notifications every 15s
     setInterval(loadNotifications, 15000);
@@ -990,10 +1155,6 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         
         // Load initial notifications
         loadNotifications();
-        
-        // Show today's tasks by default
-        filterTasks('today');
-        filterComplaints('today');
     });
     </script>
 </body>
