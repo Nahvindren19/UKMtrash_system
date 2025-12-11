@@ -38,6 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     exit();
 
                 case 'Maintenance and Infrastructure Department':
+                    header("Location: admin_dashboard.php");
+                    exit();
+
                 case  'Maintenance Staff':
                     header("Location: admin_dashboard.php");
                     exit();
