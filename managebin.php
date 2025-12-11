@@ -32,8 +32,8 @@ if(isset($_POST['add_bin'])){
         file_put_contents($qrPath, $qrImage);
 
         // Insert into DB
-        $stmt = $conn->prepare("INSERT INTO bin(binNo, binLocation, status, qrCode) VALUES (?, ?, 'Available', ?)");
-        $stmt->bind_param("sss", $binNo, $binLocation, $qrPath);
+        $stmt = $conn->prepare("INSERT INTO bin(binNo, binLocation, zone, status, qrCode) VALUES (?, ?, ?, 'Available', ?)");
+        $stmt->bind_param("ssss", $binNo, $binLocation,  $zone, $qrPath);
 
         if($stmt->execute()){
             header("Location: managebin.php?success=add");
@@ -51,9 +51,10 @@ if(isset($_POST['edit_bin'])){
     $binNo = $_POST['edit_binNo'];
     $binLocation = $_POST['edit_binLocation'];
     $status = $_POST['edit_status'];
+    $zone = $_POST['edit_zone']; // added
 
-    $stmt = $conn->prepare("UPDATE bin SET binLocation=?, status=? WHERE binNo=?");
-    $stmt->bind_param("sss", $binLocation, $status, $binNo);
+    $stmt = $conn->prepare("UPDATE bin SET binLocation=?, status=?, zone=? WHERE binNo=?");
+    $stmt->bind_param("ssss", $binLocation, $zone, $status, $binNo);
 
     if($stmt->execute()){
         header("Location: managebin.php?success=edit");

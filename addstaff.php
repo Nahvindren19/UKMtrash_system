@@ -18,6 +18,7 @@ if(isset($_POST['add_staff'])){
     $staffID = $_POST['staffID'];
     $name = $_POST['name'];
     $email = $_POST['email'];
+    $zone = $_POST['zone']; // new zone field
     $defaultPassword = 'default123';
     $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
 

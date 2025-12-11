@@ -4,7 +4,7 @@ include 'database.php';
 include 'assigntask_crud.php';
 
 // Only admin
-if (!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance and Infrastructure Department') {
+if (!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff') {
     header("Location: login.php");
     exit();
 }
