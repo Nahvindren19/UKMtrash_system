@@ -5,7 +5,7 @@ include 'assigntask_crud.php';
 
 // Only admin
 if (!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance and Infrastructure Department') {
-    header("Location: login.php");
+    header("Location: index.php");
     exit();
 }
 
