@@ -4,14 +4,8 @@ include 'database.php';
 include 'assigntask_crud.php';
 
 // Only admin
-<<<<<<< HEAD
 if (!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff') {
-    header("Location: login.php");
-=======
-if (!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance and Infrastructure Department') {
     header("Location: index.php");
->>>>>>> d36e3b34b370496ece75ce1eed5366908f9d70b0
-    exit();
 }
 
 // Get selected zone (for filtering)
