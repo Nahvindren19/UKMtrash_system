@@ -29,6 +29,12 @@ while($row = $notifResult->fetch_assoc()){
     if($row['is_read'] == 0) $unreadCount++;
 }
 
+// Fetch statistics for dashboard
+$taskCount = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending')")->fetch_assoc()['count'];
+$complaintCount = $conn->query("SELECT COUNT(*) as count FROM complaint WHERE assigned_to='$cleanerID' AND status IN ('Assigned','In Progress')")->fetch_assoc()['count'];
+$today = date('Y-m-d');
+$todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$cleanerID' AND date='$today' AND status IN ('Scheduled','Pending')")->fetch_assoc()['count'];
+
 ?>
 
 <!DOCTYPE html>
@@ -203,6 +209,263 @@ while($row = $notifResult->fetch_assoc()){
             font-size: 1.1rem;
         }
 
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(127, 196, 155, 0.15);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--accent), var(--accent-dark));
+        }
+
+        .stat-content h3 {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-content .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .stat-content .change {
+            font-size: 13px;
+            color: var(--success-text);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-icon {
+            position: absolute;
+            right: 25px;
+            top: 25px;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(127, 196, 155, 0.1);
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        /* Tasks Section */
+        .tasks-section {
+            margin-top: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius);
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-outline:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-text);
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        thead {
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+        }
+
+        th {
+            padding: 20px;
+            text-align: left;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(127, 196, 155, 0.1);
+            transition: var(--transition);
+        }
+
+        tbody tr:hover {
+            background: rgba(127, 196, 155, 0.05);
+        }
+
+        td {
+            padding: 18px 20px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-scheduled {
+            background: var(--info);
+            color: var(--info-text);
+        }
+
+        .status-pending {
+            background: var(--warning);
+            color: var(--warning-text);
+        }
+
+        .status-completed {
+            background: var(--success);
+            color: var(--success-text);
+        }
+
+        .status-in-progress {
+            background: rgba(155, 89, 182, 0.1);
+            color: #9b59b6;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-complete {
+            background: var(--success-text);
+            color: white;
+        }
+
+        .action-complete:hover {
+            background: #27ae60;
+        }
+
+        .action-view {
+            background: var(--info-text);
+            color: white;
+        }
+
+        .action-view:hover {
+            background: #2980b9;
+        }
+
+        /* Notification styles */
+        .notification {
+            padding: 15px;
+            border-bottom: 1px solid rgba(127, 196, 155, 0.1);
+            transition: var(--transition);
+        }
+
+        .notification.unread {
+            background: rgba(52, 152, 219, 0.05);
+            border-left: 3px solid var(--info-text);
+        }
+
+        .notification:hover {
+            background: rgba(127, 196, 155, 0.05);
+        }
+
         /* Message Alerts */
         .alert {
             padding: 20px;
@@ -213,6 +476,21 @@ while($row = $notifResult->fetch_assoc()){
             gap: 15px;
             animation: slideDown 0.5s ease;
             box-shadow: var(--shadow-light);
+        }
+
+        .alert-info {
+            background: var(--info);
+            border-left: 5px solid var(--info-text);
+        }
+
+        .alert-warning {
+            background: var(--warning);
+            border-left: 5px solid var(--warning-text);
+        }
+
+        .alert-success {
+            background: var(--success);
+            border-left: 5px solid var(--success-text);
         }
 
         @keyframes slideDown {
@@ -261,35 +539,27 @@ while($row = $notifResult->fetch_assoc()){
                 width: 100%;
                 justify-content: center;
             }
-            .assign-form {
-                min-width: 200px;
+            table {
+                min-width: 100%;
+                font-size: 13px;
+            }
+            th, td {
+                padding: 12px 10px;
             }
         }
 
-        /* Temporary table style */
-        table {
-            width: 80%;
-            border-collapse: collapse;
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
+        /* No data message */
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 16px;
         }
 
-        table th, table td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        table th {
-            background-color: #ccc;
-        }
-
-        table td.description-column {
-            white-space: normal;
-            word-wrap: break-word;
-            word-break: break-word;
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--accent-2);
         }
     </style>
 </head>
@@ -306,85 +576,280 @@ while($row = $notifResult->fetch_assoc()){
             </div>
 
             <ul class="nav-links">
-                <li><a href="cleaner_dashboard.php" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
-                <li><a href="#"><i class="fas fa-user-plus"></i> Update Completion</a></li>
-                <li><a href="#"><i class="fas fa-trash-alt"></i> Regular Tasks</a></li>
-                <li><a href="#"><i class="fas fa-chart-line"></i> Assigned Complaints</a></li>
-                <li><a href="#"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                <li><a href="cleaner_dashboard.php" class="active"><i class="fas fa-tasks"></i> Scheduled Tasks</a></li>
+                <li><a href="#"><i class="fas fa-exclamation-circle"></i> Assigned Complaints</a></li>
+                <li><a href="#"><i class="fas fa-check-circle"></i> Update Completion</a></li>
                 <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
+        
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
             <div class="header">
                 <div class="welcome-section">
-                    <h2>Cleaner Dashboard</h2>
-                    <p>View schedule and update task completion</p>
+                    <h2>Welcome, <?php echo $_SESSION['name']; ?>!</h2>
+                    <p>View your scheduled tasks and assigned complaints</p>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="markAllComplete()">
+                        <i class="fas fa-check-double"></i> Mark All Today's Tasks Complete
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Scheduled Tasks</h3>
+                        <div class="value">
+                            <?php echo $taskCount; ?>
+                        </div>
+                        <div class="change">
+                            <i class="fas fa-arrow-up"></i> Tasks assigned to you
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Assigned Complaints</h3>
+                        <div class="value">
+                            <?php echo $complaintCount; ?>
+                        </div>
+                        <div class="change">
+                            <i class="fas fa-clock"></i> Requires attention
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Notifications</h3>
+                        <div class="value"><?= $unreadCount ?></div>
+                        <div class="change">
+                            <i class="fas fa-envelope"></i> Unread messages
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Today's Schedule</h3>
+                        <div class="value">
+                            <?php echo $todayTasks; ?>
+                        </div>
+                        <div class="change">
+                            <i class="fas fa-calendar"></i> Tasks for today
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Notifications -->
-            <h3>Notifications (<span id="unreadCount"><?= $unreadCount ?></span>)</h3>
-            <div id="notifications" style="border:1px solid #ccc; padding:10px; max-height:300px; overflow-y:auto; background-color:#fff;">
-                <?php foreach($notifications as $n): ?>
-                    <div class="notification <?= $n['is_read']==0?'unread':'' ?>" data-id="<?= $n['id'] ?>">
-                        <?= htmlspecialchars($n['message']) ?><br>
-                        <small><?= $n['created_at'] ?></small>
-                        <?php if($n['is_read']==0): ?>
-                            <br><span class="mark-read" style="cursor:pointer;color:blue;text-decoration:underline;font-size:12px;">Mark as read</span>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+            <div class="section-header">
+                <h3>Notifications (<span id="unreadCount"><?= $unreadCount ?></span>)</h3>
+                <div class="section-actions">
+                    <button class="btn btn-outline" onclick="markAllAsRead()">
+                        <i class="fas fa-check-double"></i> Mark All Read
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <div id="notifications">
+                    <?php if(empty($notifications)): ?>
+                        <div class="no-data">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No notifications found</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach($notifications as $n): ?>
+                            <div class="notification <?= $n['is_read']==0?'unread':'' ?>" data-id="<?= $n['id'] ?>">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div>
+                                        <strong><?= htmlspecialchars($n['message']) ?></strong>
+                                        <br>
+                                        <small style="color: var(--muted);"><?= $n['created_at'] ?></small>
+                                    </div>
+                                    <?php if($n['is_read']==0): ?>
+                                        <span class="mark-read" style="cursor:pointer;color:var(--info-text);text-decoration:underline;font-size:12px;margin-left:10px;">
+                                            Mark as read
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <!-- Regular Tasks -->
-            <h3>Regular Tasks</h3>
-            <table border="1" cellpadding="5">
-            <tr><th>TaskID</th><th>Location</th><th>Date</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr>
-            <?php while($t = $tasks->fetch_assoc()){ ?>
-            <tr>
-            <td><?= $t['taskID']; ?></td>
-            <td><?= $t['location']; ?></td>
-            <td><?= $t['date']; ?></td>
-            <td><?= $t['start_time']; ?></td>
-            <td><?= $t['end_time']; ?></td>
-            <td><?= $t['status']; ?></td>
-            <td>
-            <form method="POST" action="mark_complete.php">
-            <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
-            <button type="submit">Mark Completed</button>
-            </form>
-            </td>
-            </tr>
-            <?php } ?>
-            </table>
+            <!-- Scheduled Tasks (From assigntask.php) -->
+            <div class="section-header">
+                <h3>Scheduled Tasks</h3>
+                <div class="section-actions">
+                    <div class="btn-group">
+                        <button class="btn btn-outline" onclick="filterTasks('today')">
+                            <i class="fas fa-calendar-day"></i> Today
+                        </button>
+                        <button class="btn btn-outline" onclick="filterTasks('upcoming')">
+                            <i class="fas fa-calendar-week"></i> Upcoming
+                        </button>
+                        <button class="btn btn-outline" onclick="filterTasks('all')">
+                            <i class="fas fa-calendar-alt"></i> All
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <?php if($tasks->num_rows == 0): ?>
+                    <div class="no-data">
+                        <i class="fas fa-tasks"></i>
+                        <p>No scheduled tasks assigned</p>
+                        <small>Tasks will appear here once assigned by management staff</small>
+                    </div>
+                <?php else: ?>
+                    <table id="tasksTable">
+                        <thead>
+                            <tr>
+                                <th>TaskID</th>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($t = $tasks->fetch_assoc()): 
+                                $taskDate = $t['date'];
+                                $isToday = ($taskDate == $today);
+                                $taskClass = $isToday ? 'today-task' : '';
+                            ?>
+                            <tr class="task-row <?= $taskClass ?>" data-date="<?= $taskDate ?>">
+                                <td><?= $t['taskID']; ?></td>
+                                <td><?= $t['location']; ?></td>
+                                <td><?= date('d/m/Y', strtotime($taskDate)); ?></td>
+                                <td><?= date('h:i A', strtotime($t['start_time'])); ?></td>
+                                <td><?= date('h:i A', strtotime($t['end_time'])); ?></td>
+                                <td>
+                                    <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $t['status'])) ?>">
+                                        <?= $t['status']; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <form method="POST" action="mark_complete.php" style="display: inline;">
+                                            <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
+                                            <button type="submit" class="action-btn action-complete">
+                                                <i class="fas fa-check"></i> Complete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
 
-            <!-- Assigned Complaints -->
-            <h3>Assigned Complaints</h3>
-            <table border="1" cellpadding="5">
-            <tr><th>ID</th><th>Bin</th><th>Type</th><th>Description</th><th>Date</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr>
-            <?php while($c = $complaints->fetch_assoc()){ ?>
-            <tr>
-            <td><?= $c['complaintID']; ?></td>
-            <td><?= $c['binNo']; ?></td>
-            <td><?= $c['type']; ?></td>
-            <td><?= htmlspecialchars($c['description']); ?></td>
-            <td><?= $c['date']; ?></td>
-            <td><?= $c['start_time']; ?></td>
-            <td><?= $c['end_time']; ?></td>
-            <td><?= $c['status']; ?></td>
-            <td>
-            <form method="POST" action="mark_complete.php">
-            <input type="hidden" name="complaintID" value="<?= $c['complaintID']; ?>">
-            <button type="submit">Mark Completed</button>
-            </form>
-            </td>
-            </tr>
-            <?php } ?>
-            </table>
-    </main>
+            <!-- Assigned Complaints (From assign_complaints.php) -->
+            <div class="section-header">
+                <h3>Assigned Complaints</h3>
+                <div class="section-actions">
+                    <div class="btn-group">
+                        <button class="btn btn-outline" onclick="filterComplaints('today')">
+                            <i class="fas fa-calendar-day"></i> Today
+                        </button>
+                        <button class="btn btn-outline" onclick="filterComplaints('urgent')">
+                            <i class="fas fa-exclamation-triangle"></i> Urgent
+                        </button>
+                        <button class="btn btn-outline" onclick="filterComplaints('all')">
+                            <i class="fas fa-list"></i> All
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <?php 
+                // Reset pointer for complaints since we already fetched them
+                $complaints->data_seek(0);
+                if($complaints->num_rows == 0): ?>
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>No complaints assigned</p>
+                        <small>Complaints will appear here once assigned by management staff</small>
+                    </div>
+                <?php else: ?>
+                    <table id="complaintsTable">
+                        <thead>
+                            <tr>
+                                <th>Complaint ID</th>
+                                <th>Bin No</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Date Reported</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($c = $complaints->fetch_assoc()): 
+                                $complaintDate = $c['date'];
+                                $isUrgent = ($c['type'] == 'Urgent' || $c['type'] == 'Emergency');
+                                $complaintClass = $isUrgent ? 'urgent-complaint' : '';
+                            ?>
+                            <tr class="complaint-row <?= $complaintClass ?>" data-type="<?= $c['type'] ?>" data-date="<?= $complaintDate ?>">
+                                <td>C-<?= $c['complaintID']; ?></td>
+                                <td><?= $c['binNo']; ?></td>
+                                <td>
+                                    <span class="status-badge <?= $isUrgent ? 'status-in-progress' : 'status-pending' ?>">
+                                        <?= $c['type']; ?>
+                                    </span>
+                                </td>
+                                <td style="max-width: 200px;"><?= htmlspecialchars($c['description']); ?></td>
+                                <td><?= date('d/m/Y', strtotime($complaintDate)); ?></td>
+                                <td>
+                                    <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $c['status'])) ?>">
+                                        <?= $c['status']; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <form method="POST" action="mark_complete.php" style="display: inline;">
+                                            <input type="hidden" name="complaintID" value="<?= $c['complaintID']; ?>">
+                                            <button type="submit" class="action-btn action-complete">
+                                                <i class="fas fa-check"></i> Resolve
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
+        </main>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
@@ -395,30 +860,141 @@ while($row = $notifResult->fetch_assoc()){
         });
     }
 
+    // Mark all notifications as read
+    function markAllAsRead(){
+        $.post('mark_all_read.php', {userID: '<?= $cleanerID ?>'}, function(){
+            loadNotifications();
+        });
+    }
+
+    // Load notifications
     function loadNotifications(){
         $.getJSON('fetch_notification.php', function(data){
             const container = $('#notifications');
             container.empty();
             $('#unreadCount').text(data.unreadCount);
 
+            if(data.notifications.length === 0) {
+                container.html(`
+                    <div class="no-data">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>No notifications found</p>
+                    </div>
+                `);
+                return;
+            }
+
             data.notifications.forEach(n => {
-                const div = $('<div class="notification"></div>').text(n.message + ' ').attr('data-id', n.id);
-                div.append('<br><small>' + n.created_at + '</small>');
-                if(n.is_read == 0){
-                    div.addClass('unread');
-                    const mark = $('<span class="mark-read">Mark as read</span>');
-                    mark.css({'cursor':'pointer','color':'blue','font-size':'12px','text-decoration':'underline'});
-                    mark.click(() => markAsRead(n.id));
-                    div.append('<br>').append(mark);
-                }
-                container.append(div);
+                const notificationClass = n.is_read == 0 ? 'notification unread' : 'notification';
+                const notificationDiv = $(`
+                    <div class="${notificationClass}" data-id="${n.id}">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <strong>${n.message}</strong>
+                                <br>
+                                <small style="color: var(--muted);">${n.created_at}</small>
+                            </div>
+                            ${n.is_read == 0 ? '<span class="mark-read" style="cursor:pointer;color:var(--info-text);text-decoration:underline;font-size:12px;margin-left:10px;">Mark as read</span>' : ''}
+                        </div>
+                    </div>
+                `);
+
+                // Add click event for mark as read
+                notificationDiv.find('.mark-read').click(function() {
+                    markAsRead(n.id);
+                });
+
+                container.append(notificationDiv);
             });
         });
     }
 
+    // Filter tasks by date
+    function filterTasks(filterType) {
+        const today = '<?= $today ?>';
+        const rows = document.querySelectorAll('.task-row');
+        
+        rows.forEach(row => {
+            const taskDate = row.getAttribute('data-date');
+            let show = true;
+            
+            switch(filterType) {
+                case 'today':
+                    show = (taskDate === today);
+                    break;
+                case 'upcoming':
+                    show = (taskDate > today);
+                    break;
+                case 'all':
+                default:
+                    show = true;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    // Filter complaints
+    function filterComplaints(filterType) {
+        const today = '<?= $today ?>';
+        const rows = document.querySelectorAll('.complaint-row');
+        
+        rows.forEach(row => {
+            const complaintType = row.getAttribute('data-type');
+            const complaintDate = row.getAttribute('data-date');
+            let show = true;
+            
+            switch(filterType) {
+                case 'today':
+                    show = (complaintDate === today);
+                    break;
+                case 'urgent':
+                    show = (complaintType === 'Urgent' || complaintType === 'Emergency');
+                    break;
+                case 'all':
+                default:
+                    show = true;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    // Mark all today's tasks as complete
+    function markAllComplete() {
+        if(confirm('Are you sure you want to mark all today\'s tasks as complete?')) {
+            $.post('mark_all_complete.php', {
+                cleanerID: '<?= $cleanerID ?>',
+                date: '<?= $today ?>'
+            }, function(response) {
+                if(response.success) {
+                    alert('All today\'s tasks marked as complete!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            }, 'json');
+        }
+    }
+
     // Auto-refresh notifications every 15s
     setInterval(loadNotifications, 15000);
-    loadNotifications();
+    
+    // Initialize
+    $(document).ready(function() {
+        // Add click events for existing mark-read buttons
+        $('.mark-read').click(function() {
+            const notificationId = $(this).closest('.notification').data('id');
+            markAsRead(notificationId);
+        });
+        
+        // Load initial notifications
+        loadNotifications();
+        
+        // Show today's tasks by default
+        filterTasks('today');
+        filterComplaints('today');
+    });
     </script>
 </body>
 </html>
