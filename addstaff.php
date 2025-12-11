@@ -26,9 +26,9 @@ if(isset($_POST['add_staff'])){
     $stmt1->bind_param("ssss", $staffID, $hashedPassword, $name, $email);
     $stmt1->execute();
 
-    // Insert into CleaningStaff table
-    $stmt2 = $conn->prepare("INSERT INTO cleaningstaff (ID, status, change_password) VALUES (?, 'Available', 0)");
-    $stmt2->bind_param("s", $staffID);
+    // Insert into CleaningStaff table with zone
+    $stmt2 = $conn->prepare("INSERT INTO cleaningstaff (ID, status, change_password, zone) VALUES (?, 'Available', 0, ?)");
+    $stmt2->bind_param("ss", $staffID, $zone);
     $stmt2->execute();
 
     $success = "Cleaner added successfully! Default password: <b>default123</b>";
@@ -390,6 +390,28 @@ if(isset($_POST['add_staff'])){
             color: var(--success-text);
         }
 
+        /* Form Elements */
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+
         /* Responsive Design */
         @media (max-width: 1024px) {
             .sidebar {
@@ -492,6 +514,36 @@ if(isset($_POST['add_staff'])){
                             <label class="form-label">Staff Email</label>
                             <input type="email" name="email" class="form-control" 
                                    placeholder="Enter staff email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Staff Zone</label>
+                            <select name="zone" id="zone" class="form-control" required>
+                                <option value="">-- Select Zone --</option>
+                                <!-- KBH Blocks -->
+                                <option value="KBH-A">KBH - Block A</option>
+                                <option value="KBH-B">KBH - Block B</option>
+                                <option value="KBH-C">KBH - Block C</option>
+                                <option value="KBH-D">KBH - Block D</option>
+                                <option value="KBH-E">KBH - Block E</option>
+                                <option value="KBH-F">KBH - Block F</option>
+
+                                <!-- KIY Blocks -->
+                                <option value="KIY-A">KIY - Block A</option>
+                                <option value="KIY-B">KIY - Block B</option>
+                                <option value="KIY-C">KIY - Block C</option>
+                                <option value="KIY-D">KIY - Block D</option>
+                                <option value="KIY-E">KIY - Block E</option>
+                                <option value="KIY-F">KIY - Block F</option>
+
+                                <!-- KRK Blocks -->
+                                <option value="KRK-A">KRK - Block A</option>
+                                <option value="KRK-B">KRK - Block B</option>
+                                <option value="KRK-C">KRK - Block C</option>
+                                <option value="KRK-D">KRK - Block D</option>
+                                <option value="KRK-E">KRK - Block E</option>
+                                <option value="KRK-F">KRK - Block F</option>
+                            </select>
                         </div>
 
                         <button type="submit" name="add_staff" class="btn btn-primary">

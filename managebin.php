@@ -2,7 +2,7 @@
 session_start();
 include 'database.php';
 
-// Only Admin or Cleaning Staff
+// Only Admin or Cleaner
 if(!isset($_SESSION['ID']) || 
    ($_SESSION['category'] != 'Maintenance Staff' && $_SESSION['category'] != 'Cleaning Staff')){
     header("Location: index.php");
@@ -17,6 +17,7 @@ $error = "";
 if(isset($_POST['add_bin'])){
     $binNo = $_POST['binNo'];
     $binLocation = $_POST['binLocation'];
+    $zone = $_POST['zone']; // <-- new
 
     // QR code folder
     if(!file_exists('qr_codes')) mkdir('qr_codes', 0777, true);
@@ -660,6 +661,20 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
                                    placeholder="Enter bin location" required>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">Bin Zone</label>
+                             <select name="zone" class="form-control" required>
+                                <option value="">--Select Zone--</option>
+                                <option value="KBH-A">KBH - Block A</option>
+                                <option value="KBH-B">KBH - Block B</option>
+                                <option value="KIY-A">KIY - Block A</option>
+                                <option value="KIY-B">KIY - Block B</option>
+                                <option value="KRK-A">KRK - Block A</option>
+                                <option value="KRK-B">KRK - Block B</option>
+                                <!-- Add all blocks as needed -->
+                            </select><br>
+
+                        </div>
+                        <div class="form-group">
                             <button type="submit" name="add_bin" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add Bin
                             </button>
@@ -681,6 +696,7 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
                             <tr>
                                 <th>Bin No</th>
                                 <th>Location</th>
+                                <th>Zone</th>
                                 <th>Status</th>
                                 <th>QR Code</th>
                                 <th>Actions</th>
@@ -698,6 +714,18 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
                                         <input type="text" name="edit_binLocation" 
                                                class="form-control" style="padding: 8px;"
                                                value="<?= htmlspecialchars($row['binLocation']) ?>">
+                                    </td>
+                                    <td>
+                                        <select name="edit_zone" class="form-control" style="padding: 8px;">
+                                            <option value="">--Select Zone--</option>
+                                            <option value="KBH-A" <?= $row['zone']=='KBH-A'?'selected':'';?>>KBH - Block A</option>
+                                            <option value="KBH-B" <?= $row['zone']=='KBH-B'?'selected':'';?>>KBH - Block B</option>
+                                            <option value="KIY-A" <?= $row['zone']=='KIY-A'?'selected':'';?>>KIY - Block A</option>
+                                            <option value="KIY-B" <?= $row['zone']=='KIY-B'?'selected':'';?>>KIY - Block B</option>
+                                            <option value="KRK-A" <?= $row['zone']=='KRK-A'?'selected':'';?>>KRK - Block A</option>
+                                            <option value="KRK-B" <?= $row['zone']=='KRK-B'?'selected':'';?>>KRK - Block B</option>
+                                            <!-- Add all blocks as needed -->
+                                        </select>
                                     </td>
                                     <td>
                                         <select name="edit_status" class="form-control" style="padding: 8px;">
