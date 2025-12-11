@@ -12,7 +12,7 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff'){
 $success = "";
 
 // -------------------------------------------
-// ADD CLEANING STAFF
+// ADD CLEANER
 // -------------------------------------------
 if(isset($_POST['add_staff'])){
     $staffID = $_POST['staffID'];
@@ -31,7 +31,7 @@ if(isset($_POST['add_staff'])){
     $stmt2->bind_param("s", $staffID);
     $stmt2->execute();
 
-    $success = "Cleaning Staff added successfully! Default password: <b>default123</b>";
+    $success = "Cleaner added successfully! Default password: <b>default123</b>";
 }
 
 ?>
@@ -96,14 +96,14 @@ if(isset($_POST['add_staff'])){
 
 <div class="container">
 
-    <!-- CLEANING STAFF FORM -->
+    <!-- CLEANER FORM -->
     <div class="card">
-        <h3>Add Cleaning Staff</h3>
+        <h3>Add Cleaner</h3>
         <form method="POST">
             <input type="text" name="staffID" placeholder="Staff ID" required>
             <input type="text" name="name" placeholder="Staff Name" required>
             <input type="email" name="email" placeholder="Staff Email" required>
-            <button type="submit" name="add_staff">Add Cleaning Staff</button>
+            <button type="submit" name="add_staff">Add Cleaner</button>
         </form>
     </div>
 
