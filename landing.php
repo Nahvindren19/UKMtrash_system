@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Efficient Trash Management System — Our College, Our Home</title>
+  <title>Efficient Trash Management System — Our College, Our Home Cannot Login</title>
   <meta name="description" content="Efficient Trash Management System for Kolej Kediaman UKM — Smart scheduling, easy reporting, cleaner campus.">
 
   <!-- Font & Icons -->
