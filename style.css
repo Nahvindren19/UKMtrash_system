@@ -33,3 +33,25 @@ button {
 button:hover {
     background: #0056b3;
 }
+
+
+.notificationItem {
+    padding:10px;
+    border-bottom:1px solid #eee;
+    font-size:14px;
+}
+.notificationItem.unread {
+    background-color:#f0f8ff;
+    font-weight:bold;
+}
+.notificationItem:hover {
+    background-color:#e6f7ff;
+}
+.mark-read {
+    cursor:pointer;
+    color:blue;
+    font-size:12px;
+    text-decoration:underline;
+}
+
+

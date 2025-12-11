@@ -3,7 +3,7 @@ session_start();
 include 'database.php';
 
 // Admin access only
-if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance and Infrastructure Department'){
+if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff'){
     header("Location: login.php");
     exit();
 }
