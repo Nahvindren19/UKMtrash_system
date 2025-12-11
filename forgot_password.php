@@ -10,9 +10,8 @@ require 'PHPMailer/Exception.php';
 require 'PHPMailer/PHPMailer.php';
 require 'PHPMailer/SMTP.php';
 
-
-$error = "";
 $success = "";
+$error = ""; // ✅ Initialize $error
 
 if(isset($_POST['send_code'])){
     $email = trim($_POST['email']);
