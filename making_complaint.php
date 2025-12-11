@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $currentTime = time();
 
             $fixedSchedule = [
-                strtotime(date("Y-m-d") . " 00:00:00"),
+                strtotime(date("Y-m-d") . " 08:00:00"),
                 strtotime(date("Y-m-d") . " 13:00:00"),
                 strtotime(date("Y-m-d") . " 16:00:00")
             ];
