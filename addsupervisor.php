@@ -3,7 +3,7 @@ session_start();
 include 'database.php';
 
 // Admin access only
-if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff'){
+if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance and Infrastructure Department'){
     header("Location: login.php");
     exit();
 }
@@ -11,29 +11,26 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff'){
 // Handle form submission
 $success = "";
 
-// -------------------------------------------
-// ADD CLEANING STAFF
-// -------------------------------------------
-if(isset($_POST['add_staff'])){
-    $staffID = $_POST['staffID'];
-    $name = $_POST['name'];
-    $email = $_POST['email'];
+
+if(isset($_POST['add_supervisor'])){
+    $supID = $_POST['supID'];
+    $name = $_POST['sup_name'];
+    $email = $_POST['sup_email'];
     $defaultPassword = 'default123';
     $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
 
     // Insert into user table
-    $stmt1 = $conn->prepare("INSERT INTO user (ID, password, name, category, email) VALUES (?, ?, ?, 'Cleaning Staff', ?)");
-    $stmt1->bind_param("ssss", $staffID, $hashedPassword, $name, $email);
+    $stmt1 = $conn->prepare("INSERT INTO user (ID, password, name, category, email) VALUES (?, ?, ?, 'Cleaning Supervisor', ?)");
+    $stmt1->bind_param("ssss", $supID, $hashedPassword, $name, $email);
     $stmt1->execute();
 
-    // Insert into CleaningStaff table
-    $stmt2 = $conn->prepare("INSERT INTO cleaningstaff (ID, status, change_password) VALUES (?, 'Available', 0)");
-    $stmt2->bind_param("s", $staffID);
+    // Insert into CleaningSupervisor table
+    $stmt2 = $conn->prepare("INSERT INTO CleaningSupervisor (ID, change_password) VALUES (?, 0)");
+    $stmt2->bind_param("s", $supID);
     $stmt2->execute();
 
-    $success = "Cleaning Staff added successfully! Default password: <b>default123</b>";
+    $success = "Supervisor added successfully! Default password: <b>default123</b>";
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -88,7 +85,7 @@ if(isset($_POST['add_staff'])){
 </head>
 <body>
 
-    <?php include 'dashboard.php'; ?> 
+<h2>Welcome <?php echo $_SESSION['name']; ?> (Admin)</h2>
 
 <?php if($success): ?>
     <p class="success"><?php echo $success; ?></p>
@@ -96,17 +93,17 @@ if(isset($_POST['add_staff'])){
 
 <div class="container">
 
-    <!-- CLEANING STAFF FORM -->
+
+    <!-- SUPERVISOR FORM -->
     <div class="card">
-        <h3>Add Cleaning Staff</h3>
+        <h3>Add Cleaning Supervisor</h3>
         <form method="POST">
-            <input type="text" name="staffID" placeholder="Staff ID" required>
-            <input type="text" name="name" placeholder="Staff Name" required>
-            <input type="email" name="email" placeholder="Staff Email" required>
-            <button type="submit" name="add_staff">Add Cleaning Staff</button>
+            <input type="text" name="supID" placeholder="Supervisor ID" required>
+            <input type="text" name="sup_name" placeholder="Supervisor Name" required>
+            <input type="email" name="sup_email" placeholder="Supervisor Email" required>
+            <button type="submit" name="add_supervisor">Add Supervisor</button>
         </form>
     </div>
-
 
 </div>
 

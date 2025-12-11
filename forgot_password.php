@@ -5,12 +5,13 @@ include 'database.php';
 // ✅ PHPMailer includes
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-require 'PHPMailer/src/Exception.php';
-require 'PHPMailer/src/PHPMailer.php';
-require 'PHPMailer/src/SMTP.php';
 
-$error = "";
+require 'PHPMailer/Exception.php';
+require 'PHPMailer/PHPMailer.php';
+require 'PHPMailer/SMTP.php';
+
 $success = "";
+$error = ""; // ✅ Initialize $error
 
 if(isset($_POST['send_code'])){
     $email = trim($_POST['email']);
