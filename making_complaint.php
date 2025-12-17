@@ -804,14 +804,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             document.getElementById("method_indicator").className = "method-indicator method-qr";
             document.getElementById("method_indicator").textContent = "QR Scan";
 
-            // Add visual feedback
-            binIdField.classList.add('scan-success');
-            binLocationField.classList.add('scan-success');
-            setTimeout(() => {
-                binIdField.classList.remove('scan-success');
-                binLocationField.classList.remove('scan-success');
-            }, 1000);
-
             // Fetch bin location
             fetch("get_bin_location.php?bin=" + binNo)
                 .then(res => res.json())
@@ -839,12 +831,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     function showScanSuccess() {
         const scannerSection = document.querySelector('.scanner-section');
-        scannerSection.innerHTML += `
-            <div style="margin-top: 20px; padding: 15px; background: rgba(46, 204, 113, 0.1); 
-                       border-radius: 12px; color: var(--success-text); text-align: center; animation: slideDown 0.5s ease;">
-                <i class="fas fa-check-circle"></i>
-                <span style="font-weight: 600;">QR scanned successfully!</span>
-            </div>
+
+        if (scannerSection.querySelector('.scan-success-msg')) return;
+
+        const msg = document.createElement('div');
+        msg.className = 'scan-success-msg';
+        msg.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span style="font-weight: 600;">QR scanned successfully!</span>
+        `;
+        msg.style.cssText = `
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(46, 204, 113, 0.1);
+            border-radius: 12px;
+            color: var(--success-text);
+            text-align: center;
         `;
         
         // Scroll to form
