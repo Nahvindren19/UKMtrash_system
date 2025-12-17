@@ -154,7 +154,7 @@ body { background: #f5f7fa; }
 
     <?php if(isset($editrow)): ?>
         <input type="hidden" name="oldid" value="<?= $editrow['taskID']; ?>">
-        <button name="update" class="btn btn-primary">Update</button>
+        <button name="update" class="btn btn-primary">Updates</button>
     <?php else: ?>
         <button name="create_task" class="btn btn-success">Assign Task</button>
     <?php endif; ?>
