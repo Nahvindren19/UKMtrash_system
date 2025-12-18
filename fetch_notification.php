@@ -8,11 +8,18 @@ $userID = $_SESSION['ID'];
 
 // Fetch all notifications for the logged-in student
 $stmt = $conn->prepare("
-    SELECT id, complaintID, message, is_read, created_at 
-    FROM notifications 
-    WHERE userID=? 
+    SELECT 
+        id,
+        complaintID,
+        taskID,
+        message,
+        is_read,
+        created_at
+    FROM notifications
+    WHERE userID=?
     ORDER BY is_read ASC, created_at DESC
 ");
+
 $stmt->bind_param("s", $userID);
 $stmt->execute();
 $result = $stmt->get_result();

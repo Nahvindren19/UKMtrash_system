@@ -129,6 +129,8 @@ if($error) echo "<p class='error'>$error</p>";
         <option value="KIY-B">KIY - Block B</option>
         <option value="KRK-A">KRK - Block A</option>
         <option value="KRK-B">KRK - Block B</option>
+        <option value="KPZ-A">KPZ - Block A</option>
+        <option value="KPZ-B">KPZ - Block B</option>
         <!-- Add all blocks as needed -->
     </select><br>
 

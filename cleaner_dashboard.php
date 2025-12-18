@@ -11,7 +11,17 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
 $cleanerID = $_SESSION['ID'];
 
 // Fetch assigned tasks
-$tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY date,start_time");
+$tasks = $conn->query("
+    SELECT 
+        t.*,
+        b.binLocation AS location
+    FROM task t
+    JOIN bin b ON t.binNo = b.binNo
+    WHERE t.staffID='$cleanerID'
+      AND t.status IN ('Scheduled','Pending')
+    ORDER BY t.date, t.start_time
+");
+
 
 // Fetch assigned complaints (including resolved ones for history)
 $complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY status, date DESC, start_time");

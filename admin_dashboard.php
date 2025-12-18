@@ -62,6 +62,7 @@ $complaints = $conn->query($query);
 
 <div class="dashboard-buttons">
     <a href="addstaff.php">➕ Add Cleaning Staff</a>
+    <a href="assigntask.php">➕ Manage Tasks</a>
     <a href="managebin.php">🗑 Manage Bins</a>
 </div>
 

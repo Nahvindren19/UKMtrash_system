@@ -69,6 +69,15 @@ WHERE complaintID=?
 $update->bind_param("sssi", $cleanerID, $cStart, $cEnd, $complaintID);
 $update->execute();
 
+// Mark cleaner as BUSY
+$busy = $conn->prepare("
+    UPDATE cleaningstaff
+    SET status = 'Busy'
+    WHERE ID = ?
+");
+$busy->bind_param("s", $cleanerID);
+$busy->execute();
+
 // Notifications
 $notifyText = "Complaint ID $complaintID assigned on $cDate from $cStart to $cEnd at $cLocation.";
 

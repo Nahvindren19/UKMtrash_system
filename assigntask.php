@@ -1,224 +1,247 @@
-<?php
+ <?php
 session_start();
 include 'database.php';
-include 'assigntask_crud.php';
 
-// Only admin
-if (!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff') {
+/* =========================
+   ACCESS CONTROL
+========================= */
+if (!isset($_SESSION['ID']) || $_SESSION['category'] !== 'Maintenance Staff') {
     header("Location: index.php");
+    exit();
 }
 
-// Get selected zone (for filtering)
-$selectedZone = isset($_GET['zone']) ? $_GET['zone'] : "";
+/* =========================
+   CONFIGURATION
+========================= */
+$FIXED_SLOTS = [
+    '09:00:00' => '10:00:00',
+    '13:00:00' => '14:00:00',
+    '16:00:00' => '17:00:00'
+];
 
-// Fetch Staff by zone
-$staffQuery = $conn->prepare("SELECT ID, name FROM user WHERE category='Cleaning Staff' AND zone LIKE ?");
-$zoneFilter = $selectedZone ? $selectedZone : '%';
-$staffQuery->bind_param("s", $zoneFilter);
-$staffQuery->execute();
-$staffResult = $staffQuery->get_result();
+$zones = ["KPZ-A","KPZ-B","KPZ-C","KPZ-D","KPZ-E","KPZ-F"];
 
-// Fetch Bins by zone
-$binQuery = $conn->prepare("SELECT binNo, binLocation FROM bin WHERE zone LIKE ?");
-$binQuery->bind_param("s", $zoneFilter);
-$binQuery->execute();
-$binResult = $binQuery->get_result();
+$success = "";
+$error   = "";
 
-// Fetch edit row
-$editrow = null;
-if (isset($_GET['edit'])) {
-    $stmt = $conn->prepare("SELECT * FROM task WHERE taskID=?");
-    $stmt->bind_param("s", $_GET['edit']);
-    $stmt->execute();
-    $editrow = $stmt->get_result()->fetch_assoc();
-    $selectedZone = $editrow['zone'];
-}
+/* =========================
+   AUTO ASSIGN TASKS
+========================= */
+if (isset($_POST['auto_assign'])) {
 
-// Auto-generate Task ID if creating new
-if (!isset($editrow)) {
-    $lastTask = $conn->query("SELECT taskID FROM task ORDER BY taskID DESC LIMIT 1")->fetch_assoc();
-    if ($lastTask) {
-        $num = intval(substr($lastTask['taskID'], 1)) + 1;
-        $newTaskID = 'T' . str_pad($num, 3, '0', STR_PAD_LEFT);
+    $zone = $_POST['zone'] ?? '';
+    $date = $_POST['date'] ?? '';
+
+    if ($zone === '' || $date === '') {
+        $error = "Please select both zone and date.";
     } else {
-        $newTaskID = 'T001';
+
+        /* ---- Fetch Bins ---- */
+        $binsStmt = $conn->prepare("SELECT binNo FROM bin WHERE zone=?");
+        $binsStmt->bind_param("s", $zone);
+        $binsStmt->execute();
+        $bins = $binsStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        if (count($bins) === 0) {
+            $error = "No bins found in this zone.";
+        } else {
+
+            /* ---- Fetch Cleaning Staff ---- */
+            $staffStmt = $conn->prepare("
+                SELECT ID FROM user 
+                WHERE category='Cleaning Staff' AND zone=?
+            ");
+            $staffStmt->bind_param("s", $zone);
+            $staffStmt->execute();
+            $staffs = $staffStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            if (count($staffs) === 0) {
+                $error = "No cleaning staff available in this zone.";
+            } else {
+
+                /* ---- Existing Tasks ---- */
+                $existing = [];
+                $existStmt = $conn->prepare("
+                    SELECT binNo, start_time 
+                    FROM task 
+                    WHERE zone=? AND date=?
+                ");
+                $existStmt->bind_param("ss", $zone, $date);
+                $existStmt->execute();
+                $res = $existStmt->get_result();
+
+                while ($row = $res->fetch_assoc()) {
+                    $existing[$row['binNo']][] = $row['start_time'];
+                }
+
+                /* ---- Get Last Task ID ---- */
+                $lastTask = $conn->query("
+                    SELECT taskID FROM task ORDER BY taskID DESC LIMIT 1
+                ")->fetch_assoc();
+
+                $taskNum = $lastTask ? intval(substr($lastTask['taskID'], 1)) + 1 : 1;
+
+                $staffIndex = 0;
+
+                /* ---- Assign Tasks ---- */
+                foreach ($bins as $bin) {
+                    foreach ($FIXED_SLOTS as $start => $end) {
+
+                        if (
+                            isset($existing[$bin['binNo']]) &&
+                            in_array($start, $existing[$bin['binNo']])
+                        ) {
+                            continue;
+                        }
+
+                        $staffID = $staffs[$staffIndex % count($staffs)]['ID'];
+                        $taskID  = 'T' . str_pad($taskNum++, 3, '0', STR_PAD_LEFT);
+                        $note    = "Auto-assigned task for $zone bin {$bin['binNo']}";
+
+                        /* ---- Insert Task ---- */
+                        $insert = $conn->prepare("
+                            INSERT INTO task
+                            (taskID, staffID, zone, binNo, date, start_time, end_time, note)
+                            VALUES (?,?,?,?,?,?,?,?)
+                        ");
+                        $insert->bind_param(
+                            "ssssssss",
+                            $taskID,
+                            $staffID,
+                            $zone,
+                            $bin['binNo'],
+                            $date,
+                            $start,
+                            $end,
+                            $note
+                        );
+                        $insert->execute();
+
+                        /* ---- Notification ---- */
+                        $message = "New task assigned: Bin {$bin['binNo']} ($start - $end)";
+                        $notif = $conn->prepare("
+                            INSERT INTO notifications
+                            (userID, taskID, message, is_read, created_at)
+                            VALUES (?, ?, ?, 0, NOW())
+                        ");
+                        $notif->bind_param("sss", $staffID, $taskID, $message);
+                        $notif->execute();
+
+                        $staffIndex++;
+                    }
+                }
+
+                $success = "Tasks successfully generated for $zone on $date.";
+            }
+        }
     }
-} else {
-    $newTaskID = $editrow['taskID'];
 }
+
+/* =========================
+   DISPLAY TASKS
+========================= */
+$showZone = $_POST['zone'] ?? '';
+$showDate = $_POST['date'] ?? '';
+$tasks = [];
+$existingDates = [];
+
+if ($showZone !== '') {
+    $stmt = $conn->prepare("SELECT DISTINCT date FROM task WHERE zone=?");
+    $stmt->bind_param("s", $showZone);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        $existingDates[] = $row['date'];
+    }
+}
+
+if ($showZone !== '' && $showDate !== '') {
+    $stmt = $conn->prepare("
+        SELECT t.taskID, t.binNo, u.name AS staffName,
+               t.start_time, t.end_time, t.note
+        FROM task t
+        JOIN user u ON t.staffID = u.ID
+        WHERE t.zone=? AND t.date=?
+        ORDER BY t.start_time, t.binNo
+    ");
+    $stmt->bind_param("ss", $showZone, $showDate);
+    $stmt->execute();
+    $tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+$existingDatesJs = json_encode($existingDates);
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Assign Task</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<style>
-body { background: #f5f7fa; }
-.form-section {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    margin-bottom: 35px;
-}
-</style>
+    <title>Auto Assign Tasks</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 <body>
 
-<?php include 'dashboard.php'; ?>
+<div class="container mt-5">
+    <h2>Auto Assign Tasks</h2>
 
-<div class="container mt-4">
-
-<div class="form-section">
-<h3><?= isset($editrow) ? "Edit Task" : "Assign New Task"; ?></h3>
-
-<form method="POST" action="assigntask_crud.php">
-    <div class="row">
-        <!-- Zone Dropdown -->
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Zone</label>
-            <select name="zone" class="form-select" onchange="window.location='assigntask.php?zone=' + this.value" required>
-                <option value="">-- Select Zone --</option>
-                <?php 
-                $zones = ["KPZ A", "KPZ B", "KPZ C", "KPZ D", "KPZ E", "KPZ F"];
-                foreach ($zones as $z): ?>
-                    <option value="<?= $z ?>" <?= ($selectedZone == $z ? "selected" : "") ?>><?= $z ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <!-- Task ID -->
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Task ID</label>
-            <input type="text" name="taskID" class="form-control" value="<?= $newTaskID; ?>" readonly>
-        </div>
-
-        <!-- Staff -->
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Assign Staff</label>
-            <select name="staffID" class="form-select" required>
-                <option value="">-- Select Staff --</option>
-                <?php while ($s = $staffResult->fetch_assoc()): ?>
-                    <option value="<?= $s['ID'] ?>" 
-                        <?= isset($editrow) && $editrow['staffID'] == $s['ID'] ? "selected" : ""; ?>>
-                        <?= $s['name'] ?> (<?= $s['ID'] ?>)
-                    </option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-
-        <!-- Bin -->
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Bin Location</label>
-            <select name="binNo" class="form-select" required>
-                <option value="">-- Select Bin --</option>
-                <?php while ($b = $binResult->fetch_assoc()): ?>
-                    <option value="<?= $b['binNo'] ?>" 
-                        <?= isset($editrow) && $editrow['binNo'] == $b['binNo'] ? "selected" : ""; ?>>
-                        <?= $b['binNo'] ?> - <?= $b['binLocation'] ?>
-                    </option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-
-        <!-- Date -->
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Date</label>
-            <input type="date" name="date" class="form-control"
-                value="<?= isset($editrow) ? $editrow['date'] : ''; ?>" required>
-        </div>
-
-        <!-- Start Time -->
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Start Time</label>
-            <input type="time" name="start_time" class="form-control"
-                value="<?= isset($editrow) ? $editrow['start_time'] : ''; ?>" required>
-        </div>
-
-        <!-- End Time -->
-        <div class="col-md-4 mb-3">
-            <label class="form-label">End Time</label>
-            <input type="time" name="end_time" class="form-control"
-                value="<?= isset($editrow) ? $editrow['end_time'] : ''; ?>" required>
-        </div>
-
-        <!-- Note -->
-        <div class="col-md-12 mb-3">
-            <label class="form-label">Note</label>
-            <textarea name="note" class="form-control" rows="3"><?= isset($editrow['note']) ? htmlspecialchars($editrow['note']) : ''; ?></textarea>
-        </div>
-
-    </div>
-
-    <?php if(isset($editrow)): ?>
-        <input type="hidden" name="oldid" value="<?= $editrow['taskID']; ?>">
-        <button name="update" class="btn btn-primary">Updates</button>
-    <?php else: ?>
-        <button name="create_task" class="btn btn-success">Assign Task</button>
+    <?php if ($success): ?>
+        <p style="color:green"><?= $success ?></p>
     <?php endif; ?>
 
-</form>
+    <?php if ($error): ?>
+        <p style="color:red"><?= $error ?></p>
+    <?php endif; ?>
+
+    <form method="POST">
+        <label>Zone:</label>
+        <select name="zone" onchange="this.form.submit()" required>
+            <option value="">-- Select Zone --</option>
+            <?php foreach ($zones as $z): ?>
+                <option value="<?= $z ?>" <?= ($showZone === $z ? 'selected' : '') ?>>
+                    <?= $z ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
+        <label>Date:</label>
+        <input type="text" id="date" name="date" value="<?= $showDate ?>" required>
+
+        <button type="submit" name="auto_assign">
+            Generate / Update Tasks
+        </button>
+    </form>
+
+    <h3>Tasks for <?= $showZone ?> on <?= $showDate ?></h3>
+
+    <?php if (count($tasks) === 0): ?>
+        <p>No tasks available.</p>
+    <?php else: ?>
+        <table border="1" cellpadding="5">
+            <tr>
+                <th>Task ID</th>
+                <th>Bin</th>
+                <th>Staff</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Note</th>
+            </tr>
+            <?php foreach ($tasks as $t): ?>
+                <tr>
+                    <td><?= $t['taskID'] ?></td>
+                    <td><?= $t['binNo'] ?></td>
+                    <td><?= $t['staffName'] ?></td>
+                    <td><?= $t['start_time'] ?></td>
+                    <td><?= $t['end_time'] ?></td>
+                    <td><?= $t['note'] ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php endif; ?>
 </div>
 
-<!-- TASK TABLE -->
-<h3>Task List</h3>
-<table id="taskTable" class="table table-striped table-bordered">
-<thead>
-<tr>
-    <th>Task ID</th>
-    <th>Zone</th>
-    <th>Staff</th>
-    <th>Bin</th>
-    <th>Bin Location</th>
-    <th>Date</th>
-    <th>Start</th>
-    <th>End</th>
-    <th>Note</th>
-    <th>Actions</th>
-</tr>
-</thead>
-<tbody>
-
-<?php
-$result = $conn->query("
-    SELECT t.*, u.name as staffName, b.binLocation 
-    FROM task t 
-    JOIN user u ON t.staffID = u.ID
-    JOIN bin b ON t.binNo = b.binNo
-");
-while ($row = $result->fetch_assoc()):
-?>
-<tr>
-    <td><?= $row['taskID']; ?></td>
-    <td><?= $row['zone']; ?></td>
-    <td><?= $row['staffName']; ?></td>
-    <td><?= $row['binNo']; ?></td>
-    <td><?= $row['binLocation']; ?></td>
-    <td><?= $row['date']; ?></td>
-    <td><?= $row['start_time']; ?></td>
-    <td><?= $row['end_time']; ?></td>
-    <td><?= $row['note']; ?></td>
-    <td>
-        <a href="assigntask.php?edit=<?= $row['taskID']; ?>" class="btn btn-sm btn-success">Edit</a>
-        <a href="assigntask_crud.php?delete=<?= $row['taskID']; ?>" class="btn btn-sm btn-danger"
-           onclick="return confirm('Delete this task?');">Delete</a>
-    </td>
-</tr>
-<?php endwhile; ?>
-
-</tbody>
-</table>
-
-</div>
-
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script>
-$(document).ready(function(){
-    $('#taskTable').DataTable();
+flatpickr("#date", {
+    dateFormat: "Y-m-d"
 });
 </script>
 
