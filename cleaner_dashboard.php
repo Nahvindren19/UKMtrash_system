@@ -872,7 +872,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                         <div class="task-card <?= $taskClass ?>" data-date="<?= $taskDate ?>">
                             <div class="task-card-header" onclick="toggleTaskCard(this)">
                                 <h4>
-                                    <i class="fas fa-map-marker-alt"></i> <?= $t['location']; ?>
+                                    <i class="fas fa-map-marker-alt"></i> <?= $t['zone']; ?>
                                     <small style="display: block; font-size: 12px; opacity: 0.9;">Task ID: <?= $t['taskID']; ?></small>
                                 </h4>
                                 <div class="toggle-icon">
