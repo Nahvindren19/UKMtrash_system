@@ -8,7 +8,7 @@ include 'database.php';
    ACCESS CONTROL
 ======================= */
 if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff'){
-    header("Location: login.php");
+    header("Location: index.php");
     exit();
 }
 
@@ -52,7 +52,9 @@ if(isset($_POST['update_staff'])){
 ======================= */
 $success = "";
 if(isset($_POST['add_staff'])){
-    $staffID = $_POST['staffID'];
+    $lastStaff = $conn->query("SELECT * FROM cleaningstaff ORDER BY ID DESC LIMIT 1")->fetch_assoc();
+
+    $staffID = $lastStaff ? 'C'.str_pad((int)(substr($lastStaff['ID'], 1)) + 1, 3, '0', STR_PAD_LEFT) : 'C001';
     $name = $_POST['name'];
     $email = $_POST['email'];
     $zone = $_POST['zone'];
@@ -175,9 +177,6 @@ body{
         <div class="card-body">
             <form method="POST" class="row g-3">
                 <div class="col-md-3">
-                    <input class="form-control" name="staffID" placeholder="Staff ID" required>
-                </div>
-                <div class="col-md-3">
                     <input class="form-control" name="name" placeholder="Full Name" required>
                 </div>
                 <div class="col-md-3">
@@ -188,6 +187,8 @@ body{
                         <option value="">Zone</option>
                         <option>KBH-A</option><option>KBH-B</option>
                         <option>KIY-A</option><option>KRK-A</option>
+                         <option>KBH-A</option><option>KBH-B</option>
+                        <option>KPZ-A</option><option>KPZ-B</option>
                     </select>
                 </div>
                 <div class="col-md-1 d-grid">
