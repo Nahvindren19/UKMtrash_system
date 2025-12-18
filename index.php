@@ -98,8 +98,8 @@ body {
 }
 
 .login-logo {
-    width: 70px;
-    height: 70px;
+    width: 120px;
+    height: auto;
     margin-bottom: 15px;
 }
 
