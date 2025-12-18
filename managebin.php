@@ -12,9 +12,12 @@ if(!isset($_SESSION['ID']) ||
 // Initialize messages
 $success = "";
 $error = "";
+$lastBin = $conn->query("SELECT * FROM bin ORDER BY binNo DESC LIMIT 1")->fetch_assoc();
 
 if(isset($_POST['add_bin'])){
-    $binNo = $_POST['binNo'];
+    $lastBin = $conn->query("SELECT * FROM bin ORDER BY ID DESC LIMIT 1")->fetch_assoc();
+
+    $binNo = $lastBin ? 'B'.str_pad((int)(substr($lastBin['binNo'], 1)) + 1, 3, '0', STR_PAD_LEFT) : 'B001';
     $binLocation = $_POST['binLocation'];
     $zone = $_POST['zone'];
 

@@ -455,6 +455,7 @@ $staffList = $conn->query("
                 <div class="form-group">
                     <label class="form-label">Zone</label>
                     <select class="form-select" name="zone" required>
+<<<<<<< HEAD
                         <option value="">Select Zone</option>
                         <option value="KBH-A">KBH-A</option>
                         <option value="KBH-B">KBH-B</option>
@@ -462,6 +463,13 @@ $staffList = $conn->query("
                         <option value="KRK-A">KRK-A</option>
                         <option value="KPZ-A">KPZ-A</option>
                         <option value="KPZ-B">KPZ-B</option>
+=======
+                        <option value="">Zone</option>
+                        <option>KBH-A</option><option>KBH-B</option>
+                        <option>KIY-A</option><option>KRK-A</option>
+                        <option>KBH-A</option><option>KBH-B</option>
+                        <option>KPZ-A</option><option>KPZ-B</option>
+>>>>>>> 225c7f1215e9e87010e579dc094e69685dfd1695
                     </select>
                 </div>
                 <div class="form-group" style="align-self: flex-end;">
