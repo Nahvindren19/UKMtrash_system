@@ -23,7 +23,7 @@ $tasks = $conn->query("
     ORDER BY t.taskID DESC
 ");
 
-=======
+
 $tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
 
 
