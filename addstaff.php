@@ -187,7 +187,7 @@ body{
                         <option value="">Zone</option>
                         <option>KBH-A</option><option>KBH-B</option>
                         <option>KIY-A</option><option>KRK-A</option>
-                         <option>KBH-A</option><option>KBH-B</option>
+                        <option>KBH-A</option><option>KBH-B</option>
                         <option>KPZ-A</option><option>KPZ-B</option>
                     </select>
                 </div>
