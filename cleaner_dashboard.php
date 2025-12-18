@@ -11,6 +11,7 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
 $cleanerID = $_SESSION['ID'];
 
 // Fetch assigned tasks
+<<<<<<< HEAD
 $tasks = $conn->query("
     SELECT 
         t.*,
@@ -22,9 +23,12 @@ $tasks = $conn->query("
     ORDER BY t.date, t.start_time
 ");
 
+=======
+$tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
+>>>>>>> 2e145a4fdefcb8c26ed89fedfe68c84c10a67ac5
 
 // Fetch assigned complaints (including resolved ones for history)
-$complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY status, date DESC, start_time");
+$complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY complaintID DESC");
 
 // Fetch notifications
 $stmt = $conn->prepare("SELECT * FROM notifications WHERE userID=? ORDER BY is_read ASC, created_at DESC");
@@ -882,7 +886,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                         <div class="task-card <?= $taskClass ?>" data-date="<?= $taskDate ?>">
                             <div class="task-card-header" onclick="toggleTaskCard(this)">
                                 <h4>
-                                    <i class="fas fa-map-marker-alt"></i> <?= $t['location']; ?>
+                                    <i class="fas fa-map-marker-alt"></i> <?= $t['zone']; ?>
                                     <small style="display: block; font-size: 12px; opacity: 0.9;">Task ID: <?= $t['taskID']; ?></small>
                                 </h4>
                                 <div class="toggle-icon">
