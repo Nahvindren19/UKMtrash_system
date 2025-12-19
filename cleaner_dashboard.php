@@ -11,7 +11,7 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
 $cleanerID = $_SESSION['ID'];
 
 // Fetch assigned tasks
-<<<<<<< HEAD
+#<<<<<<< HEAD
 $tasks = $conn->query("
     SELECT 
         t.*,
@@ -23,9 +23,8 @@ $tasks = $conn->query("
     ORDER BY t.date, t.start_time
 ");
 
-=======
 $tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
->>>>>>> 2e145a4fdefcb8c26ed89fedfe68c84c10a67ac5
+
 
 // Fetch assigned complaints (including resolved ones for history)
 $complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY complaintID DESC");
@@ -915,7 +914,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                                     </div>
                                 </div>
                                 <div class="task-actions">
-                                    <form method="POST" action="mark_complete.php" style="display: inline;">
+                                    <form method="POST" action="marktask_complete.php" style="display: inline;">
                                         <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
                                         <button type="submit" class="action-btn action-complete">
                                             <i class="fas fa-check"></i> Mark as Complete
