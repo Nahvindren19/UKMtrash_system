@@ -116,14 +116,6 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             border-bottom: 1px solid rgba(127, 196, 155, 0.1);
         }
 
-<<<<<<< HEAD
-<div class="dashboard-buttons">
-    <a href="addstaff.php">➕ Add Cleaning Staff</a>
-    <a href="assigntask.php">➕ Assign Tasks</a>
-    <a href="assigned_task_list.php">➕ Manage Tasks</a>
-    <a href="managebin.php">🗑 Manage Bins</a>
-</div>
-=======
         .sidebar-logo {
             width: 50px;
             height: 50px;
@@ -133,7 +125,6 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             padding: 5px;
             box-shadow: var(--shadow-light);
         }
->>>>>>> 0f87ba91973d9ee59038f877d8c30993eb7f5519
 
         .sidebar-title h2 {
             font-size: 18px;
