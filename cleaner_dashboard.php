@@ -22,8 +22,8 @@ $tasks = $conn->query("
     ORDER BY t.taskID DESC
 ");
 
+// Fetch assigned tasks (scheduled or pending)
 $tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
-
 
 // Fetch assigned complaints (including resolved ones for history)
 $complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY complaintID DESC");
