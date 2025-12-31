@@ -820,9 +820,9 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                         <button class="btn btn-outline" onclick="markAllAsRead()">
                             <i class="fas fa-check-double"></i> Mark All Read
                         </button>
-                        <button class="btn btn-outline" onClick="viewAll()">
-                            <i class="far fa-plus-square"></i> View All
-                        </button>
+                        <!--<button class="btn btn-outline" onClick="viewAll()">-->
+                        <!--    <i class="far fa-plus-square"></i> View All-->
+                        <!--</button>-->
                     </div>
                 </div>
                 

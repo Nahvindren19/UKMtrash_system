@@ -795,7 +795,7 @@
           <div class="footer-column">
             <h4>Kolej Kediaman</h4>
             <ul>
-              <li><a href="#">About UKM</a></li>
+              <li><a href="https://www.ukm.my/portalukm/ms/mengenai-ukm/">About UKM</a></li>
               <li><a href="#">Campus Life</a></li>
               <li><a href="#">Sustainability</a></li>
             </ul>

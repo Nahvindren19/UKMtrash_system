@@ -5,6 +5,13 @@ from selenium.webdriver.common.by import By
 def test_button_placeholder(): 
     try: 
         driver = setup()
+
+        #Click button with "Resolve" label
+        #resolve_button = driver.find_element(By.CSS_SELECTOR, "input[placeholder*='Resolve']")
+        #resolve_button.click()
+        #print("\"Resolve\" button works.")
+
+        #sleep or wait
         time.sleep(10)
 
     finally: 
