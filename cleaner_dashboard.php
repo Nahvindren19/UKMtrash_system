@@ -11,11 +11,9 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
 $cleanerID = $_SESSION['ID'];
 
 // Fetch assigned tasks
-<<<<<<< HEAD
 #<<<<<<< HEAD
-=======
 
->>>>>>> 0f87ba91973d9ee59038f877d8c30993eb7f5519
+
 $tasks = $conn->query("
     SELECT 
         t.*,
@@ -26,11 +24,8 @@ $tasks = $conn->query("
       AND t.status IN ('Scheduled','Pending')
     ORDER BY t.taskID DESC
 ");
+ 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 0f87ba91973d9ee59038f877d8c30993eb7f5519
 $tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
 
 
