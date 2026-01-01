@@ -78,123 +78,239 @@ $user = $stmt->get_result()->fetch_assoc();
 <head>
 <meta charset="UTF-8">
 <title>My Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
+:root {
+    --bg: #f6fff7;
+    --card: #ffffff;
+    --text: #1f2d1f;
+    --muted: #587165;
+    --accent: #7fc49b;
+    --accent-dark: #5fa87e;
+    --radius: 16px;
+    --shadow: 0 10px 40px rgba(46, 64, 43, 0.08);
+    --shadow-light: 0 4px 20px rgba(127, 196, 155, 0.12);
+    --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+}
+
 body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #e9f7ef, #f6fffb);
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
     margin: 0;
-    padding: 30px;
+    padding: 40px;
+    min-height: 100vh;
+}
+
+.profile-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px);
 }
 
 .profile-card {
-    max-width: 420px;
-    margin: auto;
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 28px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    border-top: 6px solid #2ecc71;
+    max-width: 480px;
+    width: 100%;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 40px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    border-top: 6px solid var(--accent);
 }
 
-h2 {
+.profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+}
+
+.profile-header {
     text-align: center;
-    color: #1e7f5c;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.profile-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.profile-header p {
+    color: var(--muted);
+    font-size: 1rem;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+    box-shadow: 0 8px 20px rgba(124, 196, 153, 0.25);
 }
 
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
-label {
+.form-group label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text);
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
 }
 
-input {
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.input-wrapper input {
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
+    padding: 14px 14px 14px 46px;
+    border-radius: 12px;
+    border: 2px solid rgba(127, 196, 155, 0.2);
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    transition: var(--transition);
 }
 
-input:focus {
+.input-wrapper input:focus {
     outline: none;
-    border-color: #2ecc71;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(127, 196, 155, 0.15);
 }
 
 button {
     width: 100%;
-    padding: 12px;
-    background: #2ecc71;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     color: #ffffff;
-    font-weight: bold;
-    cursor: pointer;
+    font-weight: 600;
     font-size: 15px;
+    cursor: pointer;
+    transition: var(--transition);
     margin-top: 10px;
+    box-shadow: 0 8px 25px rgba(124, 196, 153, 0.25);
 }
 
 button:hover {
-    background: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(124, 196, 153, 0.35);
 }
 
 .success {
-    background: #d4f4e2;
-    color: #1e7f5c;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 14px;
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
     text-align: center;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+    font-weight: 500;
 }
 
 .error {
-    background: #fdecea;
-    color: #c0392b;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 14px;
+    background: rgba(255, 71, 87, 0.1);
+    color: #ff4757;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
     text-align: center;
+    border: 1px solid rgba(255, 71, 87, 0.2);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 20px;
+    }
+    
+    .profile-card {
+        padding: 30px 20px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div class="profile-card">
-    <h2>🌿 My Profile</h2>
-
-    <?php if ($success): ?>
-        <div class="success"><?= $success ?></div>
-    <?php endif; ?>
-
-    <?php if ($error): ?>
-        <div class="error"><?= $error ?></div>
-    <?php endif; ?>
-
-    <form method="POST">
-        <div class="form-group">
-            <label>User ID</label>
-            <input type="text" name="userid" value="<?= htmlspecialchars($user['ID']) ?>">
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <h2>My Profile</h2>
+            <p>Update your account information</p>
         </div>
 
-        <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>">
-        </div>
+        <?php if ($success): ?>
+            <div class="success"><?= $success ?></div>
+        <?php endif; ?>
 
-        <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>">
-        </div>
+        <?php if ($error): ?>
+            <div class="error"><?= $error ?></div>
+        <?php endif; ?>
 
-        <button type="submit" name="update_profile">Update Profile</button>
-    </form>
+        <form method="POST">
+            <div class="form-group">
+                <label>User ID</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-id-card"></i>
+                    <input type="text" name="userid" value="<?= htmlspecialchars($user['ID']) ?>">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>">
+                </div>
+            </div>
+
+            <button type="submit" name="update_profile">Update Profile</button>
+        </form>
+    </div>
 </div>
 
 </body>
