@@ -919,49 +919,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                 </div>
             </div>
 
-            <!-- Notifications Section -->
-            <section id="notifications-section" class="section-anchor">
-                <div class="section-header">
-                    <h3><i class="fas fa-bell"></i> Notifications (<span id="unreadCount"><?= $unreadCount ?></span>)</h3>
-                    <div class="section-actions">
-                        <button class="btn btn-outline" onclick="markAllAsRead()">
-                            <i class="fas fa-check-double"></i> Mark All Read
-                        </button>
-                        <!--<button class="btn btn-outline" onClick="viewAll()">-->
-                        <!--    <i class="far fa-plus-square"></i> View All-->
-                        <!--</button>-->
-                    </div>
-                </div>
-                
-                <div class="table-container">
-                    <div id="notifications">
-                        <?php if(empty($notifications)): ?>
-                            <div class="no-data">
-                                <i class="fas fa-bell-slash"></i>
-                                <p>No notifications found</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach($notifications as $n): ?>
-                                <div class="notification <?= $n['is_read']==0?'unread':'' ?>" data-id="<?= $n['id'] ?>">
-                                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                                        <div>
-                                            <strong><?= htmlspecialchars($n['message']) ?></strong>
-                                            <br>
-                                            <small style="color: var(--muted);"><?= $n['created_at'] ?></small>
-                                        </div>
-                                        <?php if($n['is_read']==0): ?>
-                                            <span class="mark-read" style="cursor:pointer;color:var(--info-text);text-decoration:underline;font-size:12px;margin-left:10px;">
-                                                Mark as read
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </section>
-
+          
             <!-- Scheduled Tasks Section -->
             <section id="scheduled-tasks-section" class="section-anchor tasks-section">
                 <div class="section-header">
