@@ -2,7 +2,7 @@
 session_start();
 include 'database.php';
 
-//Only cleaning staff (cleaner) can access
+// Only cleaning staff (cleaner) can access
 if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
     header("Location: index.php");
     exit();
@@ -10,30 +10,33 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
 
 $cleanerID = $_SESSION['ID'];
 
-
-$tasks = $conn->query("
+// Use prepared statements to prevent SQL injection
+// Single query for tasks (with proper JOIN)
+$stmt = $conn->prepare("
     SELECT 
         t.*,
         b.binLocation AS location
     FROM task t
     JOIN bin b ON t.binNo = b.binNo
-    WHERE t.staffID='$cleanerID'
+    WHERE t.staffID = ?
       AND t.status IN ('Scheduled','Pending')
     ORDER BY t.taskID DESC
 ");
- 
-
-// Fetch assigned tasks (scheduled or pending)
-$tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
-
-// Fetch assigned complaints (including resolved ones for history)
-$complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY complaintID DESC");
-
-// Fetch notifications for the bell icon
-$stmt = $conn->prepare("SELECT * FROM notifications WHERE userID=? ORDER BY is_read ASC, created_at DESC");
 $stmt->bind_param("s", $cleanerID);
 $stmt->execute();
-$notifResult = $stmt->get_result();
+$tasks = $stmt->get_result();
+
+// Fetch assigned complaints with prepared statement
+$stmt2 = $conn->prepare("SELECT * FROM complaint WHERE assigned_to = ? ORDER BY complaintID DESC");
+$stmt2->bind_param("s", $cleanerID);
+$stmt2->execute();
+$complaints = $stmt2->get_result();
+
+// Fetch notifications for the bell icon
+$stmt3 = $conn->prepare("SELECT * FROM notifications WHERE userID=? ORDER BY is_read ASC, created_at DESC");
+$stmt3->bind_param("s", $cleanerID);
+$stmt3->execute();
+$notifResult = $stmt3->get_result();
 
 $notifications = [];
 $unreadCount = 0;
@@ -42,13 +45,31 @@ while($row = $notifResult->fetch_assoc()){
     if($row['is_read'] == 0) $unreadCount++;
 }
 
-// Fetch statistics for dashboard
-$taskCount = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending')")->fetch_assoc()['count'];
-$activeComplaintCount = $conn->query("SELECT COUNT(*) as count FROM complaint WHERE assigned_to='$cleanerID' AND status IN ('Assigned','In Progress')")->fetch_assoc()['count'];
-$today = date('Y-m-d');
-$todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$cleanerID' AND date='$today' AND status IN ('Scheduled','Pending')")->fetch_assoc()['count'];
+// Fetch statistics for dashboard with prepared statements
+$stmt4 = $conn->prepare("SELECT COUNT(*) as count FROM task WHERE staffID = ? AND status IN ('Scheduled','Pending')");
+$stmt4->bind_param("s", $cleanerID);
+$stmt4->execute();
+$taskCountResult = $stmt4->get_result();
+$taskCount = $taskCountResult->fetch_assoc()['count'];
 
+$stmt5 = $conn->prepare("SELECT COUNT(*) as count FROM complaint WHERE assigned_to = ? AND status IN ('Assigned','In Progress')");
+$stmt5->bind_param("s", $cleanerID);
+$stmt5->execute();
+$activeComplaintResult = $stmt5->get_result();
+$activeComplaintCount = $activeComplaintResult->fetch_assoc()['count'];
+
+$today = date('Y-m-d');
+$stmt6 = $conn->prepare("SELECT COUNT(*) as count FROM task WHERE staffID = ? AND date = ? AND status IN ('Scheduled','Pending')");
+$stmt6->bind_param("ss", $cleanerID, $today);
+$stmt6->execute();
+$todayTasksResult = $stmt6->get_result();
+$todayTasks = $todayTasksResult->fetch_assoc()['count'];
+
+// Sanitize session data for output
+$cleanerName = htmlspecialchars($_SESSION['name'], ENT_QUOTES, 'UTF-8');
+$cleanerCategory = htmlspecialchars($_SESSION['category'], ENT_QUOTES, 'UTF-8');
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -919,7 +940,6 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                 </div>
             </div>
 
-          
             <!-- Scheduled Tasks Section -->
             <section id="scheduled-tasks-section" class="section-anchor tasks-section">
                 <div class="section-header">
@@ -1215,45 +1235,29 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         }
 
         // Toggle task card expand/collapse
-        function toggleTaskCard(header) {
-            const card = header.closest('.task-card');
-            const content = card.querySelector('.task-card-content');
-            const icon = header.querySelector('.toggle-icon');
-            
-            content.classList.toggle('expanded');
-            icon.classList.toggle('expanded');
-        }
+      
+
 
         // Filter tasks by date
         function filterTasks(filterType) {
-            const today = '<?= $today ?>';
-            const cards = document.querySelectorAll('.task-card');
-            const filterBtns = document.querySelectorAll('#scheduled-tasks-section .filter-btn');
-            
-            // Update active button
-            filterBtns.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            cards.forEach(card => {
-                const taskDate = card.getAttribute('data-date');
-                let show = true;
-                
-                switch(filterType) {
-                    case 'today':
-                        show = (taskDate === today);
-                        break;
-                    case 'upcoming':
-                        show = (taskDate > today);
-                        break;
-                    case 'all':
-                    default:
-                        show = true;
-                }
-                
-                card.style.display = show ? '' : 'none';
-            });
-        }
+    const today = '<?= $today ?>';
+    const cards = document.querySelectorAll('.task-card');
+    const filterBtns = document.querySelectorAll('#scheduled-tasks-section .filter-btn');
 
+    filterBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    cards.forEach(card => {
+        const taskDate = card.getAttribute('data-date');
+        let show = true;
+
+        if (filterType === 'today') show = (taskDate === today);
+        else if (filterType === 'upcoming') show = (taskDate > today);
+
+        card.style.display = show ? '' : 'none';
+    });
+}
+  
         // Filter complaints
         function filterComplaints(filterType) {
             const today = '<?= $today ?>';
@@ -1325,5 +1329,15 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
     `;
     document.head.appendChild(style);
     </script>
+    <script>
+function toggleTaskCard(header) {
+    const card = header.closest('.task-card');
+    const content = card.querySelector('.task-card-content');
+    const icon = header.querySelector('.toggle-icon');
+
+    content.classList.toggle('expanded');
+    icon.classList.toggle('expanded');
+}
+</script>
 </body>
 </html>
