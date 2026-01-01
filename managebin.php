@@ -3,19 +3,21 @@ session_start();
 include 'database.php';
 
 // Only Admin or Cleaning Staff
-if (!isset($_SESSION['ID']) || 
+if (!isset($_SESSION['ID']) ||
    ($_SESSION['category'] != 'Maintenance Staff' && $_SESSION['category'] != 'Cleaning Staff')) {
     header("Location: index.php");
     exit();
 }
 
-// Initialize messages
 $error = "";
 
 /* =========================
    PREVIEW NEXT BIN NUMBER
    ========================= */
-$lastBinPreview = $conn->query("SELECT binNo FROM bin ORDER BY ID DESC LIMIT 1")->fetch_assoc();
+$lastBinPreview = $conn->query(
+    "SELECT binNo FROM bin ORDER BY binNo DESC LIMIT 1"
+)->fetch_assoc();
+
 $nextBinNo = $lastBinPreview
     ? 'B' . str_pad((int)substr($lastBinPreview['binNo'], 1) + 1, 3, '0', STR_PAD_LEFT)
     : 'B001';
@@ -25,8 +27,9 @@ $nextBinNo = $lastBinPreview
    ========================= */
 if (isset($_POST['add_bin'])) {
 
-    // Get last bin again (safety for concurrent insert)
-    $lastBin = $conn->query("SELECT binNo FROM bin ORDER BY ID DESC LIMIT 1")->fetch_assoc();
+    $lastBin = $conn->query(
+        "SELECT binNo FROM bin ORDER BY binNo DESC LIMIT 1"
+    )->fetch_assoc();
 
     if ($lastBin) {
         $lastNumber = (int) substr($lastBin['binNo'], 1);
@@ -42,10 +45,12 @@ if (isset($_POST['add_bin'])) {
         mkdir('qr_codes', 0777, true);
     }
 
-    $qrContent = urlencode("http://localhost/ukm_trash_system/scan_bin.php?bin=$binNo");
+    $qrContent = urlencode("http://localhost/UKMtrash_system/scan_bin.php?bin=$binNo");
     $qrPath = "qr_codes/$binNo.png";
 
-    $qrImage = file_get_contents("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$qrContent");
+    $qrImage = file_get_contents(
+        "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$qrContent"
+    );
 
     if ($qrImage) {
         file_put_contents($qrPath, $qrImage);
@@ -116,73 +121,92 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
 <head>
     <meta charset="UTF-8">
     <title>Manage Bins</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- YOUR EXISTING CSS (UNCHANGED) -->
 </head>
 <body>
 
-<div class="container">
+<h2>Manage Bins</h2>
 
-    <h1><i class="fas fa-trash-alt"></i> Manage Bins</h1>
+<?php if (isset($_GET['success'])): ?>
+    <p style="color:green;">
+        <?php
+        switch ($_GET['success']) {
+            case 'add': echo "Bin added successfully"; break;
+            case 'edit': echo "Bin updated successfully"; break;
+            case 'delete': echo "Bin deleted successfully"; break;
+        }
+        ?>
+    </p>
+<?php endif; ?>
 
-    <?php if (isset($_GET['success'])): ?>
-        <div class="alert alert-success">
-            <?php
-            switch ($_GET['success']) {
-                case 'add': echo "Bin added successfully!"; break;
-                case 'edit': echo "Bin updated successfully!"; break;
-                case 'delete': echo "Bin deleted successfully!"; break;
-            }
-            ?>
-        </div>
-    <?php endif; ?>
+<?php if ($error): ?>
+    <p style="color:red;"><?= $error ?></p>
+<?php endif; ?>
 
-    <?php if ($error): ?>
-        <div class="alert alert-error"><?= $error ?></div>
-    <?php endif; ?>
+<!-- ADD BIN -->
+<h3>Add New Bin</h3>
+<form method="POST">
+    <label>Bin Number (Auto)</label><br>
+    <input type="text" value="<?= $nextBinNo ?>" disabled><br><br>
 
-    <!-- ADD BIN -->
-    <div class="card">
-        <h2><i class="fas fa-plus-circle"></i> Add New Bin</h2>
+    <label>Location</label><br>
+    <input type="text" name="binLocation" required><br><br>
 
-        <form method="POST" class="form-grid">
+    <label>Zone</label><br>
+    <select name="zone" required>
+        <option value="">Select Zone</option>
+        <option value="KBH-A">KBH - Block A</option>
+        <option value="KBH-B">KBH - Block B</option>
+        <option value="KIY-A">KIY - Block A</option>
+        <option value="KIY-B">KIY - Block B</option>
+        <option value="KRK-A">KRK - Block A</option>
+        <option value="KRK-B">KRK - Block B</option>
+        <option value="KPZ-A">KPZ - Block A</option>
+        <option value="KPZ-B">KPZ - Block B</option>
+    </select><br><br>
 
-            <div class="form-group">
-                <label>Bin Number (Auto)</label>
-                <input type="text" value="<?= $nextBinNo ?>" disabled class="form-input">
-            </div>
+    <button type="submit" name="add_bin">Add Bin</button>
+</form>
 
-            <div class="form-group">
-                <label>Location</label>
-                <input type="text" name="binLocation" class="form-input" required>
-            </div>
+<hr>
 
-            <div class="form-group">
-                <label>Zone</label>
-                <select name="zone" class="form-select" required>
-                    <option value="">Select Zone</option>
-                    <option value="KBH-A">KBH - Block A</option>
-                    <option value="KBH-B">KBH - Block B</option>
-                    <option value="KIY-A">KIY - Block A</option>
-                    <option value="KIY-B">KIY - Block B</option>
-                    <option value="KRK-A">KRK - Block A</option>
-                    <option value="KRK-B">KRK - Block B</option>
-                    <option value="KPZ-A">KPZ - Block A</option>
-                    <option value="KPZ-B">KPZ - Block B</option>
-                </select>
-            </div>
+<!-- BIN LIST -->
+<h3>All Bins</h3>
+<table border="1" cellpadding="8">
+<tr>
+    <th>Bin No</th>
+    <th>Location</th>
+    <th>Zone</th>
+    <th>Status</th>
+    <th>QR</th>
+    <th>Action</th>
+</tr>
 
-            <div class="form-group">
-                <button type="submit" name="add_bin" class="btn btn-success">
-                    <i class="fas fa-plus"></i> Add Bin
-                </button>
-            </div>
+<?php while ($row = $result->fetch_assoc()): ?>
+<tr>
+<form method="POST">
+    <td><?= $row['binNo'] ?></td>
+    <td><input type="text" name="edit_binLocation" value="<?= $row['binLocation'] ?>"></td>
+    <td>
+        <input type="text" name="edit_zone" value="<?= $row['zone'] ?>">
+    </td>
+    <td>
+        <select name="edit_status">
+            <option value="Available" <?= $row['status']=='Available'?'selected':'' ?>>Available</option>
+            <option value="Maintenance" <?= $row['status']=='Maintenance'?'selected':'' ?>>Maintenance</option>
+        </select>
+    </td>
+    <td><img src="<?= $row['qrCode'] ?>" width="60"></td>
+    <td>
+        <input type="hidden" name="edit_binNo" value="<?= $row['binNo'] ?>">
+        <button type="submit" name="edit_bin">Save</button>
+        <button type="submit" name="delete" value="<?= $row['binNo'] ?>"
+                onclick="return confirm('Delete this bin?')">Delete</button>
+    </td>
+</form>
+</tr>
+<?php endwhile; ?>
 
-        </form>
-    </div>
-
-</div>
+</table>
 
 </body>
 </html>
