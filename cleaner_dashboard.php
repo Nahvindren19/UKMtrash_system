@@ -11,7 +11,6 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
 $cleanerID = $_SESSION['ID'];
 
 // Fetch assigned tasks
-
 $tasks = $conn->query("
     SELECT 
         t.*,
@@ -23,9 +22,8 @@ $tasks = $conn->query("
     ORDER BY t.taskID DESC
 ");
 
-
+// Fetch assigned tasks (scheduled or pending)
 $tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
-
 
 // Fetch assigned complaints (including resolved ones for history)
 $complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY complaintID DESC");
@@ -822,6 +820,9 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                         <button class="btn btn-outline" onclick="markAllAsRead()">
                             <i class="fas fa-check-double"></i> Mark All Read
                         </button>
+                        <!--<button class="btn btn-outline" onClick="viewAll()">-->
+                        <!--    <i class="far fa-plus-square"></i> View All-->
+                        <!--</button>-->
                     </div>
                 </div>
                 
@@ -915,7 +916,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                                     </div>
                                 </div>
                                 <div class="task-actions">
-                                    <form method="POST" action="mark_complete.php" style="display: inline;">
+                                    <form method="POST" action="marktask_complete.php" style="display: inline;">
                                         <input type="hidden" name="taskID" value="<?= $t['taskID']; ?>">
                                         <button type="submit" class="action-btn action-complete">
                                             <i class="fas fa-check"></i> Mark as Complete
@@ -1028,6 +1029,13 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
     // Mark all notifications as read
     function markAllAsRead(){
         $.post('mark_all_read.php', {userID: '<?= $cleanerID ?>'}, function(){
+            loadNotifications();
+        });
+    }
+
+    // View All notifications
+    function viewAll(){
+        $.post('viewAll.php', {user: '<?=$cleanerID?>'}, function(){
             loadNotifications();
         });
     }
