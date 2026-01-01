@@ -13,43 +13,80 @@ if(!isset($_SESSION['ID']) ||
 $success = "";
 $error = "";
 
-// Get the last bin to calculate next bin number for display
-$lastBin = $conn->query("SELECT * FROM bin ORDER BY binNo DESC LIMIT 1")->fetch_assoc();
+// Get all existing bin numbers to calculate next available bin number for display
+$result = $conn->query("SELECT binNo FROM bin ORDER BY binNo");
+$existingBins = [];
+while($row = $result->fetch_assoc()) {
+    $existingBins[] = $row['binNo'];
+}
 
-// Calculate next bin number for display
-if($lastBin && isset($lastBin['binNo'])) {
-    // Extract numeric part from binNo (e.g., "B001" -> 1)
-    $lastNumber = (int) substr($lastBin['binNo'], 1);
-    $nextNumber = $lastNumber + 1;
+// Calculate next available bin number for display
+$nextBinNo = 'B001';
+if(!empty($existingBins)) {
+    // Extract all numbers
+    $numbers = [];
+    foreach($existingBins as $bin) {
+        $numbers[] = (int) substr($bin, 1);
+    }
+    
+    // Sort numbers
+    sort($numbers);
+    
+    // Find first missing number starting from 1
+    $nextNumber = 1;
+    foreach($numbers as $num) {
+        if($num == $nextNumber) {
+            $nextNumber++;
+        } else {
+            break;
+        }
+    }
     $nextBinNo = 'B' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-} else {
-    $nextBinNo = 'B001';
 }
 
 if(isset($_POST['add_bin'])){
-    // Auto-generate bin number: B001, B002, etc.
-    // Get fresh data to avoid race conditions
-    $freshLastBin = $conn->query("SELECT * FROM bin ORDER BY binNo DESC LIMIT 1")->fetch_assoc();
-    
-    if($freshLastBin && isset($freshLastBin['binNo'])) {
-        $lastNumber = (int) substr($freshLastBin['binNo'], 1);
-        $nextNumber = $lastNumber + 1;
-        $binNo = 'B' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-    } else {
-        $binNo = 'B001';
+    // Get all existing bin numbers to find next available
+    $result = $conn->query("SELECT binNo FROM bin ORDER BY binNo");
+    $existingBins = [];
+    while($row = $result->fetch_assoc()) {
+        $existingBins[] = $row['binNo'];
     }
     
-    $binLocation = $_POST['binLocation'];
+    // Find next available bin number
+    $binNo = 'B001';
+    if(!empty($existingBins)) {
+        // Extract all numbers
+        $numbers = [];
+        foreach($existingBins as $bin) {
+            $numbers[] = (int) substr($bin, 1);
+        }
+        
+        // Sort numbers
+        sort($numbers);
+        
+        // Find first missing number starting from 1
+        $nextNumber = 1;
+        foreach($numbers as $num) {
+            if($num == $nextNumber) {
+                $nextNumber++;
+            } else {
+                break;
+            }
+        }
+        $binNo = 'B' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+    }
+    
+    $binLocation = trim($_POST['binLocation']);
     $zone = $_POST['zone'];
 
     // Create qr_codes directory if it doesn't exist
-    if(!file_exists('qr_codes')) mkdir('qr_codes', 0777, true);
+    if(!file_exists('qr_codes')) mkdir('qr_codes', 0755, true);
 
     $qrContent = urlencode("http://localhost/ukm_trash_system/scan_bin.php?bin=$binNo");
     $qrPath = "qr_codes/$binNo.png";
 
     // Generate QR code
-    $qrImage = file_get_contents("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$qrContent");
+    $qrImage = @file_get_contents("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$qrContent");
     if($qrImage){
         file_put_contents($qrPath, $qrImage);
 
@@ -87,20 +124,38 @@ if(isset($_POST['edit_bin'])){
 
 if(isset($_POST['delete'])){
     $binNo = $_POST['delete'];
-
-    // Delete QR code file
-    $result = $conn->query("SELECT qrCode FROM bin WHERE binNo='$binNo'");
-    $row = $result->fetch_assoc();
-    if($row && file_exists($row['qrCode'])) unlink($row['qrCode']);
-
-    // Delete associated complaints
-    $conn->query("DELETE FROM complaint WHERE binNo='$binNo'");
     
-    // Delete the bin
-    $conn->query("DELETE FROM bin WHERE binNo='$binNo'");
-
-    header("Location: managebin.php?success=delete");
-    exit();
+    // Use prepared statement to prevent SQL injection
+    // Get QR code path first
+    $stmt = $conn->prepare("SELECT qrCode FROM bin WHERE binNo=?");
+    $stmt->bind_param("s", $binNo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if($row = $result->fetch_assoc()){
+        // Delete QR code file if exists
+        if(!empty($row['qrCode']) && file_exists($row['qrCode'])){
+            unlink($row['qrCode']);
+        }
+        
+        // Delete associated complaints with prepared statement
+        $stmt = $conn->prepare("DELETE FROM complaint WHERE binNo=?");
+        $stmt->bind_param("s", $binNo);
+        $stmt->execute();
+        
+        // Delete the bin with prepared statement
+        $stmt = $conn->prepare("DELETE FROM bin WHERE binNo=?");
+        $stmt->bind_param("s", $binNo);
+        
+        if($stmt->execute()){
+            header("Location: managebin.php?success=delete");
+            exit();
+        } else {
+            $error = "Failed to delete bin: ".$stmt->error;
+        }
+    } else {
+        $error = "Bin not found!";
+    }
 }
 
 // Get all bins for display
@@ -423,7 +478,7 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
         <?php if($error): ?>
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
-                <div><?= $error ?></div>
+                <div><?= htmlspecialchars($error) ?></div>
             </div>
         <?php endif; ?>
 
@@ -435,7 +490,7 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
             <form method="POST" class="form-grid">
                 <div class="form-group">
                     <label class="form-label">Bin Number</label>
-                    <input type="text" class="form-input" name="binNo" value="<?php echo $nextBinNo; ?>" readonly required>
+                    <input type="text" class="form-input" name="binNo" value="<?php echo htmlspecialchars($nextBinNo); ?>" readonly required>
                     <small style="color: var(--muted); font-size: 12px; margin-top: 4px;">Auto-generated (B001, B002, etc.)</small>
                 </div>
                 <div class="form-group">
@@ -510,17 +565,17 @@ $result = $conn->query("SELECT * FROM bin ORDER BY binNo ASC");
                             </select>
                         </td>
                         <td>
-                            <img src="<?= $row['qrCode'] ?>" width="80" class="qr-img" 
+                            <img src="<?= htmlspecialchars($row['qrCode']) ?>" width="80" class="qr-img" 
                                  title="QR Code for <?= htmlspecialchars($row['binNo']) ?>">
                         </td>
                         <td>
                             <form method="POST" style="display: flex; gap: 8px;">
-                                <input type="hidden" name="edit_binNo" value="<?= $row['binNo'] ?>">
+                                <input type="hidden" name="edit_binNo" value="<?= htmlspecialchars($row['binNo']) ?>">
                                 <button type="submit" class="btn btn-success btn-sm" name="edit_bin">
                                     <i class="fas fa-save"></i> Save
                                 </button>
                                 <button type="submit" class="btn btn-danger btn-sm" name="delete" 
-                                        value="<?= $row['binNo'] ?>"
+                                        value="<?= htmlspecialchars($row['binNo']) ?>"
                                         onclick="return confirm('Delete this bin? All associated complaints will also be deleted.')">
                                     <i class="fas fa-trash"></i>
                                 </button>
