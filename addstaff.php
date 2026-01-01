@@ -17,8 +17,17 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Maintenance Staff'){
 ======================= */
 if(isset($_POST['delete_staff'])){
     $id = $_POST['staff_id'];
-    $conn->query("DELETE FROM cleaningstaff WHERE ID='$id'");
-    $conn->query("DELETE FROM user WHERE ID='$id'");
+    
+    // Use prepared statements to prevent SQL injection
+    $stmt1 = $conn->prepare("DELETE FROM cleaningstaff WHERE ID = ?");
+    $stmt1->bind_param("s", $id);
+    $stmt1->execute();
+    
+    $stmt2 = $conn->prepare("DELETE FROM user WHERE ID = ?");
+    $stmt2->bind_param("s", $id);
+    $stmt2->execute();
+    
+    $_SESSION['success'] = "Staff member deleted successfully";
     header("Location: addstaff.php");
     exit();
 }
@@ -28,10 +37,22 @@ if(isset($_POST['delete_staff'])){
 ======================= */
 if(isset($_POST['update_staff'])){
     $id = $_POST['staff_id'];
-    $name = $_POST['name'];
-    $email = $_POST['email'];
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
     $zone = $_POST['zone'];
     $status = $_POST['status'];
+
+    // Check if email already exists for another user
+    $checkEmail = $conn->prepare("SELECT ID FROM user WHERE email = ? AND ID != ?");
+    $checkEmail->bind_param("ss", $email, $id);
+    $checkEmail->execute();
+    $checkEmail->store_result();
+    
+    if($checkEmail->num_rows > 0) {
+        $_SESSION['error'] = "Email address already in use by another staff member";
+        header("Location: addstaff.php");
+        exit();
+    }
 
     $stmt1 = $conn->prepare("UPDATE user SET name=?, email=?, zone=? WHERE ID=?");
     $stmt1->bind_param("ssss", $name, $email, $zone, $id);
@@ -41,38 +62,155 @@ if(isset($_POST['update_staff'])){
     $stmt2->bind_param("sss", $status, $zone, $id);
     $stmt2->execute();
 
+    $_SESSION['success'] = "Staff information updated successfully";
     header("Location: addstaff.php");
     exit();
 }
 
 /* =======================
-   ADD STAFF
+   ADD STAFF - IMPROVED VERSION
 ======================= */
 $success = "";
+$error = "";
+$nextStaffID = ""; // Variable to store the next available ID
+
+// Check for session messages
+if(isset($_SESSION['success'])) {
+    $success = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+if(isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
+
+// Calculate next available staff ID for display
+try {
+    // Get the highest existing ID
+    $result = $conn->query("SELECT ID FROM cleaningstaff WHERE ID LIKE 'C%' ORDER BY LENGTH(ID), ID DESC LIMIT 1");
+    $lastStaff = $result->fetch_assoc();
+    
+    // Generate next ID for display
+    if($lastStaff && preg_match('/C(\d+)/', $lastStaff['ID'], $matches)) {
+        $nextNum = (int)$matches[1] + 1;
+        $nextStaffID = 'C' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+    } else {
+        $nextStaffID = 'C001';
+    }
+} catch (Exception $e) {
+    $nextStaffID = 'C001'; // Default if error
+}
+
 if(isset($_POST['add_staff'])){
-    $lastStaff = $conn->query("SELECT * FROM cleaningstaff ORDER BY ID DESC LIMIT 1")->fetch_assoc();
-    $staffID = $lastStaff ? 'C'.str_pad((int)(substr($lastStaff['ID'], 1)) + 1, 3, '0', STR_PAD_LEFT) : 'C001';
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $zone = $_POST['zone'];
-    $defaultPassword = 'default123';
-    $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
-
-    $stmt1 = $conn->prepare("
-        INSERT INTO user (ID,password,name,category,email,zone)
-        VALUES (?,?,?,'Cleaning Staff',?,?)
-    ");
-    $stmt1->bind_param("sssss",$staffID,$hashedPassword,$name,$email,$zone);
-    $stmt1->execute();
-
-    $stmt2 = $conn->prepare("
-        INSERT INTO cleaningstaff (ID,status,change_password,zone)
-        VALUES (?,'Available',0,?)
-    ");
-    $stmt2->bind_param("ss",$staffID,$zone);
-    $stmt2->execute();
-
-    $success = "Cleaning Staff added successfully (Default password: default123)";
+    // Start transaction for atomicity
+    $conn->begin_transaction();
+    
+    try {
+        // Lock tables to prevent concurrent inserts
+        $conn->query("LOCK TABLES cleaningstaff WRITE, user WRITE");
+        
+        // Get the highest existing ID
+        $result = $conn->query("SELECT ID FROM cleaningstaff WHERE ID LIKE 'C%' ORDER BY LENGTH(ID), ID DESC LIMIT 1");
+        $lastStaff = $result->fetch_assoc();
+        
+        // Generate new ID
+        if($lastStaff && preg_match('/C(\d+)/', $lastStaff['ID'], $matches)) {
+            $nextNum = (int)$matches[1] + 1;
+            $staffID = 'C' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+        } else {
+            $staffID = 'C001';
+        }
+        
+        // Verify ID doesn't already exist (safety check)
+        $check = $conn->prepare("SELECT ID FROM user WHERE ID = ?");
+        $check->bind_param("s", $staffID);
+        $check->execute();
+        $check->store_result();
+        
+        $attempts = 0;
+        while($check->num_rows > 0 && $attempts < 10) {
+            $nextNum++;
+            $staffID = 'C' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+            $check->execute();
+            $check->store_result();
+            $attempts++;
+        }
+        
+        if($attempts >= 10) {
+            throw new Exception("Could not generate unique staff ID. Please try again.");
+        }
+        
+        // Get form data
+        $name = trim($_POST['name']);
+        $email = trim($_POST['email']);
+        $zone = $_POST['zone'];
+        
+        // Validate inputs
+        if(empty($name) || empty($email) || empty($zone)) {
+            throw new Exception("All fields are required");
+        }
+        
+        if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Invalid email format");
+        }
+        
+        // Check if email already exists
+        $checkEmail = $conn->prepare("SELECT ID FROM user WHERE email = ?");
+        $checkEmail->bind_param("s", $email);
+        $checkEmail->execute();
+        $checkEmail->store_result();
+        
+        if($checkEmail->num_rows > 0) {
+            throw new Exception("Email address already in use");
+        }
+        
+        // Create default password
+        $defaultPassword = 'default123';
+        $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
+        
+        // Insert into user table
+        $stmt1 = $conn->prepare("
+            INSERT INTO user (ID, password, name, category, email, zone)
+            VALUES (?, ?, ?, 'Cleaning Staff', ?, ?)
+        ");
+        $stmt1->bind_param("sssss", $staffID, $hashedPassword, $name, $email, $zone);
+        
+        if(!$stmt1->execute()) {
+            throw new Exception("Failed to create user account: " . $stmt1->error);
+        }
+        
+        // Insert into cleaningstaff table
+        $stmt2 = $conn->prepare("
+            INSERT INTO cleaningstaff (ID, status, change_password, zone)
+            VALUES (?, 'Available', 0, ?)
+        ");
+        $stmt2->bind_param("ss", $staffID, $zone);
+        
+        if(!$stmt2->execute()) {
+            throw new Exception("Failed to create staff record: " . $stmt2->error);
+        }
+        
+        // Success - commit transaction
+        $conn->query("UNLOCK TABLES");
+        $conn->commit();
+        
+        $success = "Cleaning Staff added successfully!<br>
+                   Staff ID: <strong>$staffID</strong><br>
+                   Default Password: <strong>default123</strong><br>
+                   Please inform the staff to change their password upon first login.";
+        
+        // Update next staff ID for display
+        $nextNum++;
+        $nextStaffID = 'C' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+        
+    } catch (Exception $e) {
+        // Error - rollback everything
+        $conn->rollback();
+        @$conn->query("UNLOCK TABLES"); // @ suppresses error if tables weren't locked
+        
+        // Use error message
+        $error = $e->getMessage();
+    }
 }
 
 /* =======================
@@ -86,34 +224,68 @@ $page = $_GET['page'] ?? 1;
 $limit = 5;
 $offset = ($page-1) * $limit;
 
+// Build WHERE clause safely
 $where = "WHERE u.category='Cleaning Staff'";
+$params = [];
+$types = '';
 
 if($search){
-    $where .= " AND (u.ID LIKE '%$search%' OR u.name LIKE '%$search%' OR u.email LIKE '%$search%')";
+    $where .= " AND (u.ID LIKE ? OR u.name LIKE ? OR u.email LIKE ?)";
+    $searchTerm = "%$search%";
+    $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm]);
+    $types .= 'sss';
 }
+
 if($filterZone){
-    $where .= " AND u.zone='$filterZone'";
+    $where .= " AND u.zone=?";
+    $params[] = $filterZone;
+    $types .= 's';
 }
+
 if($filterStatus){
-    $where .= " AND c.status='$filterStatus'";
+    $where .= " AND c.status=?";
+    $params[] = $filterStatus;
+    $types .= 's';
 }
 
-$totalResult = $conn->query("
-    SELECT COUNT(*) total
-    FROM user u JOIN cleaningstaff c ON u.ID=c.ID
-    $where
-")->fetch_assoc()['total'];
+// Get total results count
+$countQuery = "SELECT COUNT(*) as total FROM user u JOIN cleaningstaff c ON u.ID=c.ID $where";
+$stmt = $conn->prepare($countQuery);
 
+if(!empty($params)){
+    $stmt->bind_param($types, ...$params);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
+$totalResult = $result->fetch_assoc()['total'];
 $totalPages = ceil($totalResult / $limit);
 
-$staffList = $conn->query("
-    SELECT u.ID,u.name,u.email,u.zone,c.status
+// Get staff list with pagination
+$query = "
+    SELECT u.ID, u.name, u.email, u.zone, c.status
     FROM user u
     JOIN cleaningstaff c ON u.ID=c.ID
     $where
     ORDER BY u.ID
-    LIMIT $limit OFFSET $offset
-");
+    LIMIT ? OFFSET ?
+";
+
+$params[] = $limit;
+$params[] = $offset;
+$types .= 'ii';
+
+$stmt = $conn->prepare($query);
+$stmt->bind_param($types, ...$params);
+$stmt->execute();
+$staffList = $stmt->get_result();
+
+// Get unique zones for filter dropdown
+$zoneResult = $conn->query("SELECT DISTINCT zone FROM user WHERE zone IS NOT NULL AND zone != '' ORDER BY zone");
+$zones = [];
+while($row = $zoneResult->fetch_assoc()) {
+    $zones[] = $row['zone'];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -138,6 +310,10 @@ $staffList = $conn->query("
             --success-text: #2ecc71;
             --error: rgba(255, 71, 87, 0.1);
             --error-text: #ff4757;
+            --warning: rgba(241, 196, 15, 0.1);
+            --warning-text: #f1c40f;
+            --disabled: rgba(155, 155, 155, 0.1);
+            --disabled-text: #9b9b9b;
         }
         
         * {
@@ -212,6 +388,18 @@ $staffList = $conn->query("
             color: var(--success-text);
         }
         
+        .alert-error {
+            background: var(--error);
+            border-left: 4px solid var(--error-text);
+            color: var(--error-text);
+        }
+        
+        .alert-warning {
+            background: var(--warning);
+            border-left: 4px solid var(--warning-text);
+            color: var(--warning-text);
+        }
+        
         .card {
             background: var(--card);
             border-radius: var(--radius-lg);
@@ -228,6 +416,14 @@ $staffList = $conn->query("
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        
+        .card-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: -15px;
+            margin-bottom: 20px;
+            font-weight: 400;
         }
         
         .form-grid {
@@ -247,6 +443,13 @@ $staffList = $conn->query("
             color: var(--muted);
             margin-bottom: 8px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .form-label .required {
+            color: var(--error-text);
         }
         
         .form-input, .form-select {
@@ -261,6 +464,38 @@ $staffList = $conn->query("
         .form-input:focus, .form-select:focus {
             outline: none;
             border-color: var(--accent);
+        }
+        
+        .form-input:disabled {
+            background: var(--disabled);
+            color: var(--disabled-text);
+            cursor: not-allowed;
+            border-color: rgba(155, 155, 155, 0.2);
+        }
+        
+        .id-display {
+            background: rgba(127, 196, 155, 0.1);
+            padding: 12px 15px;
+            border-radius: var(--radius);
+            border: 2px solid rgba(127, 196, 155, 0.3);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .id-display .id-value {
+            font-family: monospace;
+            font-size: 15px;
+            letter-spacing: 1px;
+        }
+        
+        .id-display .id-hint {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: normal;
         }
         
         .btn {
@@ -281,6 +516,12 @@ $staffList = $conn->query("
         .btn:hover {
             background: var(--accent-dark);
             transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: var(--disabled-text);
+            cursor: not-allowed;
+            transform: none;
         }
         
         .btn-success {
@@ -353,6 +594,13 @@ $staffList = $conn->query("
             font-size: 14px;
         }
         
+        .staff-id-display {
+            font-family: monospace;
+            font-weight: 600;
+            color: var(--accent-dark);
+            letter-spacing: 1px;
+        }
+        
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -386,6 +634,30 @@ $staffList = $conn->query("
             background: var(--accent);
             color: white;
             border-color: var(--accent);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-available {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--success-text);
+        }
+        
+        .status-busy {
+            background: rgba(241, 196, 15, 0.1);
+            color: var(--warning-text);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
         }
         
         @keyframes slideDown {
@@ -434,7 +706,14 @@ $staffList = $conn->query("
         <?php if($success): ?>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
-                <div><?= $success ?></div>
+                <div><?= htmlspecialchars($success) ?></div>
+            </div>
+        <?php endif; ?>
+        
+        <?php if($error): ?>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div><?= htmlspecialchars($error) ?></div>
             </div>
         <?php endif; ?>
 
@@ -443,19 +722,45 @@ $staffList = $conn->query("
             <div class="card-header">
                 <i class="fas fa-user-plus"></i> Add New Cleaning Staff
             </div>
-            <form method="POST" class="form-grid">
+            <div class="card-subtitle">
+            </div>
+            <form method="POST" action="" class="form-grid">
+                <!-- Staff ID Display (Read-only) -->
                 <div class="form-group">
-                    <label class="form-label">Full Name</label>
+                    <label class="form-label">
+                        <span>Staff ID</span>
+                        <span class="required">*</span>
+                        <i class="fas fa-info-circle" title="Auto-generated staff ID (read-only)"></i>
+                    </label>
+                    <div class="id-display">
+                        <span class="id-value"><?= htmlspecialchars($nextStaffID) ?></span>
+                        <span class="id-hint">Auto-generated</span>
+                    </div>
+                    <input type="hidden" name="next_staff_id" value="<?= htmlspecialchars($nextStaffID) ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span>Full Name</span>
+                        <span class="required">*</span>
+                    </label>
                     <input type="text" class="form-input" name="name" placeholder="Enter Full Name" required>
                 </div>
+                
                 <div class="form-group">
-                    <label class="form-label">Email</label>
+                    <label class="form-label">
+                        <span>Email</span>
+                        <span class="required">*</span>
+                    </label>
                     <input type="email" class="form-input" name="email" placeholder="Enter Email" required>
                 </div>
+                
                 <div class="form-group">
-                    <label class="form-label">Zone</label>
+                    <label class="form-label">
+                        <span>Zone</span>
+                        <span class="required">*</span>
+                    </label>
                     <select class="form-select" name="zone" required>
-<<<<<<< HEAD
                         <option value="">Select Zone</option>
                         <option value="KBH-A">KBH-A</option>
                         <option value="KBH-B">KBH-B</option>
@@ -463,19 +768,16 @@ $staffList = $conn->query("
                         <option value="KRK-A">KRK-A</option>
                         <option value="KPZ-A">KPZ-A</option>
                         <option value="KPZ-B">KPZ-B</option>
-=======
-                        <option value="">Zone</option>
-                        <option>KBH-A</option><option>KBH-B</option>
-                        <option>KIY-A</option><option>KRK-A</option>
-                        <option>KBH-A</option><option>KBH-B</option>
-                        <option>KPZ-A</option><option>KPZ-B</option>
->>>>>>> 225c7f1215e9e87010e579dc094e69685dfd1695
                     </select>
                 </div>
-                <div class="form-group" style="align-self: flex-end;">
+                
+                <div class="form-group" style="align-self: flex-end; grid-column: span 2;">
                     <button type="submit" class="btn btn-success" name="add_staff">
-                        <i class="fas fa-plus"></i> Add Staff
+                        <i class="fas fa-plus"></i> Add Staff Member
                     </button>
+                    <small style="display: block; margin-top: 8px; color: var(--muted); font-size: 12px;">
+                        Default password will be: <strong>default123</strong>
+                    </small>
                 </div>
             </form>
         </div>
@@ -485,7 +787,7 @@ $staffList = $conn->query("
             <div class="card-header">
                 <i class="fas fa-filter"></i> Search & Filter
             </div>
-            <form method="GET" class="form-grid">
+            <form method="GET" action="" class="form-grid">
                 <div class="form-group">
                     <label class="form-label">Search Staff</label>
                     <input type="text" class="form-input" name="search" placeholder="Search by ID, Name, or Email" value="<?= htmlspecialchars($search) ?>">
@@ -494,10 +796,11 @@ $staffList = $conn->query("
                     <label class="form-label">Filter by Zone</label>
                     <select class="form-select" name="zone">
                         <option value="">All Zones</option>
-                        <option value="KBH-A" <?= $filterZone=='KBH-A'?'selected':'' ?>>KBH-A</option>
-                        <option value="KBH-B" <?= $filterZone=='KBH-B'?'selected':'' ?>>KBH-B</option>
-                        <option value="KIY-A" <?= $filterZone=='KIY-A'?'selected':'' ?>>KIY-A</option>
-                        <option value="KRK-A" <?= $filterZone=='KRK-A'?'selected':'' ?>>KRK-A</option>
+                        <?php foreach($zones as $zone): ?>
+                            <option value="<?= htmlspecialchars($zone) ?>" <?= $filterZone==$zone?'selected':'' ?>>
+                                <?= htmlspecialchars($zone) ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
@@ -512,6 +815,11 @@ $staffList = $conn->query("
                     <button type="submit" class="btn">
                         <i class="fas fa-search"></i> Apply Filters
                     </button>
+                    <?php if($search || $filterZone || $filterStatus): ?>
+                        <a href="addstaff.php" class="btn" style="margin-left: 10px;">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>
@@ -519,84 +827,199 @@ $staffList = $conn->query("
         <!-- Staff List -->
         <div class="card">
             <div class="card-header">
-                <i class="fas fa-list"></i> Cleaning Staff List (<?= $totalResult ?> staff)
+                <i class="fas fa-list"></i> Cleaning Staff List 
+                <span style="font-size: 14px; color: var(--muted); margin-left: 10px;">
+                    (<?= $totalResult ?> staff found)
+                </span>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Zone</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while($row = $staffList->fetch_assoc()): ?>
-                    <tr>
-                        <form method="POST">
-                            <td><strong><?= htmlspecialchars($row['ID']) ?></strong></td>
-                            <td>
-                                <input type="text" class="table-input" name="name" 
-                                       value="<?= htmlspecialchars($row['name']) ?>">
-                            </td>
-                            <td>
-                                <input type="email" class="table-input" name="email" 
-                                       value="<?= htmlspecialchars($row['email']) ?>">
-                            </td>
-                            <td>
-                                <input type="text" class="table-input" name="zone" 
-                                       value="<?= htmlspecialchars($row['zone']) ?>">
-                            </td>
-                            <td>
-                                <select class="table-select" name="status">
-                                    <option value="Available" <?= $row['status']=='Available'?'selected':'' ?>>Available</option>
-                                    <option value="Busy" <?= $row['status']=='Busy'?'selected':'' ?>>Busy</option>
-                                </select>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
+            
+            <?php if($staffList->num_rows == 0): ?>
+                <div class="no-data">
+                    <i class="fas fa-users-slash" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <h3>No Staff Found</h3>
+                    <p>No cleaning staff match your search criteria.</p>
+                </div>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Staff ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Zone</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while($row = $staffList->fetch_assoc()): ?>
+                        <tr>
+                            <form method="POST">
+                                <td>
+                                    <div class="staff-id-display">
+                                        <?= htmlspecialchars($row['ID']) ?>
+                                    </div>
                                     <input type="hidden" name="staff_id" value="<?= $row['ID'] ?>">
-                                    <button type="submit" class="btn btn-success btn-sm" name="update_staff">
-                                        <i class="fas fa-save"></i> Save
-                                    </button>
-                                    <button type="submit" class="btn btn-danger btn-sm" name="delete_staff"
-                                            onclick="return confirm('Are you sure you want to delete this staff member?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </form>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+                                </td>
+                                <td>
+                                    <input type="text" class="table-input" name="name" 
+                                           value="<?= htmlspecialchars($row['name']) ?>" required>
+                                </td>
+                                <td>
+                                    <input type="email" class="table-input" name="email" 
+                                           value="<?= htmlspecialchars($row['email']) ?>" required>
+                                </td>
+                                <td>
+                                    <input type="text" class="table-input" name="zone" 
+                                           value="<?= htmlspecialchars($row['zone']) ?>" required>
+                                </td>
+                                <td>
+                                    <select class="table-select" name="status">
+                                        <option value="Available" <?= $row['status']=='Available'?'selected':'' ?>>Available</option>
+                                        <option value="Busy" <?= $row['status']=='Busy'?'selected':'' ?>>Busy</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button type="submit" class="btn btn-success btn-sm" name="update_staff">
+                                            <i class="fas fa-save"></i> Save
+                                        </button>
+                                        <button type="submit" class="btn btn-danger btn-sm" name="delete_staff">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </form>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </div>
 
         <!-- Pagination -->
         <?php if($totalPages > 1): ?>
         <div class="pagination">
-            <?php for($i = 1; $i <= $totalPages; $i++): ?>
+            <?php if($page > 1): ?>
+                <a class="page-link" 
+                   href="?page=<?= $page-1 ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            <?php endif; ?>
+            
+            <?php 
+            // Show limited pagination links
+            $start = max(1, $page - 2);
+            $end = min($totalPages, $page + 2);
+            
+            for($i = $start; $i <= $end; $i++): ?>
                 <a class="page-link <?= $i == $page ? 'active' : '' ?>" 
                    href="?page=<?= $i ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
                     <?= $i ?>
                 </a>
             <?php endfor; ?>
+            
+            <?php if($page < $totalPages): ?>
+                <a class="page-link" 
+                   href="?page=<?= $page+1 ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Delete confirmation
         const deleteButtons = document.querySelectorAll('button[name="delete_staff"]');
         deleteButtons.forEach(button => {
             button.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to delete this staff member?')) {
+                if (!confirm('Are you sure you want to delete this staff member?\nThis action cannot be undone.')) {
                     e.preventDefault();
                 }
             });
         });
+        
+        // Form validation for add staff form
+        const addStaffForm = document.querySelector('form[method="POST"]');
+        if(addStaffForm) {
+            addStaffForm.addEventListener('submit', function(e) {
+                const name = this.querySelector('input[name="name"]').value.trim();
+                const email = this.querySelector('input[name="email"]').value.trim();
+                const zone = this.querySelector('select[name="zone"]').value;
+                
+                if(!name || !email || !zone) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields (marked with *)');
+                    return false;
+                }
+                
+                if(!validateEmail(email)) {
+                    e.preventDefault();
+                    alert('Please enter a valid email address');
+                    return false;
+                }
+            });
+        }
+        
+        // Form validation for update forms
+        const updateForms = document.querySelectorAll('tbody form');
+        updateForms.forEach(form => {
+            const updateButton = form.querySelector('button[name="update_staff"]');
+            if(updateButton) {
+                form.addEventListener('submit', function(e) {
+                    const name = form.querySelector('input[name="name"]').value.trim();
+                    const email = form.querySelector('input[name="email"]').value.trim();
+                    const zone = form.querySelector('input[name="zone"]').value.trim();
+                    
+                    if(!name || !email || !zone) {
+                        e.preventDefault();
+                        alert('All fields are required');
+                        return false;
+                    }
+                    
+                    if(!validateEmail(email)) {
+                        e.preventDefault();
+                        alert('Please enter a valid email address');
+                        return false;
+                    }
+                });
+            }
+        });
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 500);
+            });
+        }, 5000);
+        
+        // Highlight the Staff ID field on page load
+        const staffIdDisplay = document.querySelector('.id-display');
+        if(staffIdDisplay) {
+            // Add a subtle animation to draw attention
+            setTimeout(() => {
+                staffIdDisplay.style.transform = 'scale(1.02)';
+                staffIdDisplay.style.boxShadow = '0 4px 12px rgba(127, 196, 155, 0.2)';
+                staffIdDisplay.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    staffIdDisplay.style.transform = 'scale(1)';
+                    staffIdDisplay.style.boxShadow = 'none';
+                }, 1000);
+            }, 500);
+        }
     });
     </script>
 </body>
