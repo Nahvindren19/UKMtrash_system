@@ -617,7 +617,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <li><a href="making_complaint.php" class="active"><i class="fas fa-plus-circle"></i> Make Complaint</a></li>
                 <li><a href="resolved_complaints.php"><i class="fas fa-history"></i>Resolved Complaints</a></li>
                 <li><a href="student_profile.php"><i class="fas fa-user"></i> Profile</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
                 <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>

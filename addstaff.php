@@ -295,6 +295,7 @@ while($row = $zoneResult->fetch_assoc()) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ADMIN SIDEBAR STYLES - Exactly from your admin dashboard */
         :root {
             --bg: #f6fff7;
             --card: #ffffff;
@@ -302,51 +303,150 @@ while($row = $zoneResult->fetch_assoc()) {
             --muted: #587165;
             --accent: #7fc49b;
             --accent-dark: #5fa87e;
+            --glass: rgba(255,255,255,0.85);
             --radius: 16px;
             --radius-lg: 24px;
             --shadow: 0 10px 40px rgba(46, 64, 43, 0.08);
             --shadow-light: 0 4px 20px rgba(127, 196, 155, 0.12);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
             --success: rgba(46, 204, 113, 0.1);
             --success-text: #2ecc71;
             --error: rgba(255, 71, 87, 0.1);
             --error-text: #ff4757;
             --warning: rgba(241, 196, 15, 0.1);
             --warning-text: #f1c40f;
-            --disabled: rgba(155, 155, 155, 0.1);
-            --disabled-text: #9b9b9b;
+            --info: rgba(52, 152, 219, 0.1);
+            --info-text: #3498db;
         }
-        
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            padding: 30px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard-container {
+            display: flex;
             min-height: 100vh;
         }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+
+        /* Sidebar/Navigation - Exactly from your admin dashboard */
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            padding: 25px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 1px solid rgba(160, 200, 170, 0.1);
+            z-index: 100;
         }
-        
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(127, 196, 155, 0.1);
+        }
+
+        .sidebar-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: contain;
+            background: white;
+            padding: 5px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .sidebar-title h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .sidebar-title p {
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 10px;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: var(--muted);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-links a i {
+            width: 20px;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .nav-links a:hover {
+            background: rgba(127, 196, 155, 0.08);
+            color: var(--text);
+            transform: translateX(5px);
+        }
+
+        .nav-links a.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: white;
+            box-shadow: 0 8px 25px rgba(124, 196, 153, 0.25);
+        }
+
+        .nav-links a.active i {
+            color: white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            background: var(--bg);
+            min-height: 100vh;
+        }
+
+        /* Improved UI Styles */
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 1px solid rgba(127, 196, 155, 0.1);
         }
         
         .page-header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--text);
             display: flex;
@@ -364,7 +464,7 @@ while($row = $zoneResult->fetch_assoc()) {
             text-decoration: none;
             border-radius: var(--radius);
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
         
         .back-link:hover {
@@ -375,7 +475,7 @@ while($row = $zoneResult->fetch_assoc()) {
         .alert {
             padding: 15px 20px;
             border-radius: var(--radius);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -403,15 +503,16 @@ while($row = $zoneResult->fetch_assoc()) {
         .card {
             background: var(--card);
             border-radius: var(--radius-lg);
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: 25px;
+            margin-bottom: 25px;
             box-shadow: var(--shadow-light);
+            border-top: 4px solid var(--accent);
         }
         
         .card-header {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: var(--text);
             display: flex;
             align-items: center;
@@ -421,9 +522,7 @@ while($row = $zoneResult->fetch_assoc()) {
         .card-subtitle {
             font-size: 14px;
             color: var(--muted);
-            margin-top: -15px;
             margin-bottom: 20px;
-            font-weight: 400;
         }
         
         .form-grid {
@@ -459,16 +558,18 @@ while($row = $zoneResult->fetch_assoc()) {
             font-size: 14px;
             color: var(--text);
             background: var(--card);
+            font-family: 'Inter', sans-serif;
         }
         
         .form-input:focus, .form-select:focus {
             outline: none;
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(127, 196, 155, 0.1);
         }
         
         .form-input:disabled {
-            background: var(--disabled);
-            color: var(--disabled-text);
+            background: rgba(155, 155, 155, 0.1);
+            color: #9b9b9b;
             cursor: not-allowed;
             border-color: rgba(155, 155, 155, 0.2);
         }
@@ -479,25 +580,23 @@ while($row = $zoneResult->fetch_assoc()) {
             border-radius: var(--radius);
             border: 2px solid rgba(127, 196, 155, 0.3);
             font-size: 14px;
-            color: var(--accent-dark);
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
         
         .id-display .id-value {
-            /* CHANGED: Added monospace font for Staff ID */
-            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 15px;
             font-weight: 600;
             letter-spacing: 1.5px;
+            color: var(--accent-dark);
         }
         
         .id-display .id-hint {
             font-size: 12px;
             color: var(--muted);
-            font-weight: normal;
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Inter', sans-serif;
         }
         
         .btn {
@@ -512,18 +611,14 @@ while($row = $zoneResult->fetch_assoc()) {
             font-weight: 500;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            transition: var(--transition);
         }
         
         .btn:hover {
             background: var(--accent-dark);
             transform: translateY(-2px);
-        }
-        
-        .btn:disabled {
-            background: var(--disabled-text);
-            cursor: not-allowed;
-            transform: none;
+            box-shadow: var(--shadow-light);
         }
         
         .btn-success {
@@ -562,11 +657,14 @@ while($row = $zoneResult->fetch_assoc()) {
             text-align: left;
             color: white;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         tbody tr {
             border-bottom: 1px solid rgba(127, 196, 155, 0.1);
+            transition: var(--transition);
         }
         
         tbody tr:hover {
@@ -582,24 +680,31 @@ while($row = $zoneResult->fetch_assoc()) {
         
         .table-input {
             width: 100%;
-            padding: 8px 10px;
+            padding: 10px 12px;
             border: 1px solid rgba(127, 196, 155, 0.3);
             border-radius: 8px;
             font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .table-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(127, 196, 155, 0.1);
         }
         
         .table-select {
             width: 100%;
-            padding: 8px 10px;
+            padding: 10px 12px;
             border: 1px solid rgba(127, 196, 155, 0.3);
             border-radius: 8px;
             font-size: 14px;
             background: white;
+            font-family: 'Inter', sans-serif;
         }
         
         .staff-id-display {
-            /* CHANGED: Added monospace font for table Staff ID */
-            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
+            font-family: 'Courier New', monospace;
             font-weight: 600;
             color: var(--accent-dark);
             letter-spacing: 1.5px;
@@ -626,7 +731,7 @@ while($row = $zoneResult->fetch_assoc()) {
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
         
         .page-link:hover {
@@ -640,28 +745,17 @@ while($row = $zoneResult->fetch_assoc()) {
             border-color: var(--accent);
         }
         
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .status-available {
-            background: rgba(46, 204, 113, 0.1);
-            color: var(--success-text);
-        }
-        
-        .status-busy {
-            background: rgba(241, 196, 15, 0.1);
-            color: var(--warning-text);
-        }
-        
         .no-data {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
             color: var(--muted);
+        }
+        
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: var(--accent);
+            opacity: 0.5;
         }
         
         @keyframes slideDown {
@@ -669,290 +763,323 @@ while($row = $zoneResult->fetch_assoc()) {
             to { opacity: 1; transform: translateY(0); }
         }
         
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 250px;
+            }
+            .main-content {
+                margin-left: 250px;
+            }
+        }
+
         @media (max-width: 768px) {
-            body {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-content {
+                margin-left: 0;
                 padding: 20px;
             }
-            
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
             }
-            
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            
             table {
-                font-size: 13px;
+                display: block;
+                overflow-x: auto;
             }
-            
-            th, td {
-                padding: 12px 8px;
-            }
-            
             .action-buttons {
                 flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="page-header">
-            <h1><i class="fas fa-users"></i> Manage Cleaning Staff</h1>
-            <a href="admin_dashboard.php" class="back-link">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation - Exactly from your admin dashboard -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/ukmlogo.png" alt="UKM Logo" class="sidebar-logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2210%22 fill=%22%237fc49b%22/><text x=%2250%22 y=%2250%22 font-size=%2240%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22>UKM</text></svg>'">
+                <div class="sidebar-title">
+                    <h2>Trash Management</h2>
+                    <p>Maintenance Dashboard</p>
+                </div>
+            </div>
 
-        <?php if($success): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <div><?= htmlspecialchars($success) ?></div>
-            </div>
-        <?php endif; ?>
-        
-        <?php if($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <div><?= htmlspecialchars($error) ?></div>
-            </div>
-        <?php endif; ?>
+            <ul class="nav-links">
+                <li><a href="maintenance_dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#complaints-section"><i class="fas fa-exclamation-circle"></i> Complaints</a></li>
+                <li><a href="maintenance_analytics.php"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                <li><a href="addstaff.php" class="active"><i class="fas fa-user-plus"></i> Add Staff</a></li>
+                <li><a href="assigntask.php"><i class="fas fa-tasks"></i> Manage Tasks</a></li>
+                <li><a href="managebin.php"><i class="fas fa-trash-alt"></i> Manage Bins</a></li>
+                <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </aside>
 
-        <!-- Add Staff -->
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-user-plus"></i> Add New Cleaning Staff
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1><i class="fas fa-users-cog"></i> Manage Cleaning Staff</h1>
+                <a href="maintenance_dashboard.php" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
             </div>
-            <div class="card-subtitle">
-            </div>
-            <form method="POST" action="" class="form-grid">
-                <!-- Staff ID Display (Read-only) -->
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Staff ID</span>
-                        <span class="required">*</span>
-                        <i class="fas fa-info-circle" title="Auto-generated staff ID (read-only)"></i>
-                    </label>
-                    <div class="id-display">
-                        <span class="id-value"><?= htmlspecialchars($nextStaffID) ?></span>
-                        <span class="id-hint">Auto-generated</span>
+
+            <?php if($success): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <div style="white-space: pre-line;"><?= htmlspecialchars($success) ?></div>
+                </div>
+            <?php endif; ?>
+            
+            <?php if($error): ?>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div><?= htmlspecialchars($error) ?></div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Add Staff -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-plus"></i> Add New Cleaning Staff
+                </div>
+                <div class="card-subtitle">
+                    Enter details below to register a new cleaning staff member
+                </div>
+                <form method="POST" action="" class="form-grid">
+                    <!-- Staff ID Display (Read-only) -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-id-card"></i> Staff ID
+                            <span class="required">*</span>
+                        </label>
+                        <div class="id-display">
+                            <span class="id-value"><?= htmlspecialchars($nextStaffID) ?></span>
+                            <span class="id-hint">Auto-generated</span>
+                        </div>
+                        <input type="hidden" name="next_staff_id" value="<?= htmlspecialchars($nextStaffID) ?>">
                     </div>
-                    <input type="hidden" name="next_staff_id" value="<?= htmlspecialchars($nextStaffID) ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Full Name</span>
-                        <span class="required">*</span>
-                    </label>
-                    <input type="text" class="form-input" name="name" placeholder="Enter Full Name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Email</span>
-                        <span class="required">*</span>
-                    </label>
-                    <input type="email" class="form-input" name="email" placeholder="Enter Email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Zone</span>
-                        <span class="required">*</span>
-                    </label>
-                    <select class="form-select" name="zone" required>
-                        <option value="">Select Zone</option>
-                        <option value="KBH-A">KBH-A</option>
-                        <option value="KBH-B">KBH-B</option>
-                        <option value="KIY-A">KIY-A</option>
-                        <option value="KRK-A">KRK-A</option>
-                        <option value="KPZ-A">KPZ-A</option>
-                        <option value="KPZ-B">KPZ-B</option>
-                    </select>
-                </div>
-                
-                <div class="form-group" style="align-self: flex-end; grid-column: span 2;">
-                    <button type="submit" class="btn btn-success" name="add_staff">
-                        <i class="fas fa-plus"></i> Add Staff Member
-                    </button>
-                    <small style="display: block; margin-top: 8px; color: var(--muted); font-size: 12px;">
-                        Default password will be: <strong>default123</strong>
-                    </small>
-                </div>
-            </form>
-        </div>
-
-        <!-- Search & Filter -->
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-filter"></i> Search & Filter
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i> Full Name
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" name="name" placeholder="Enter Full Name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-envelope"></i> Email
+                            <span class="required">*</span>
+                        </label>
+                        <input type="email" class="form-input" name="email" placeholder="Enter Email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Zone
+                            <span class="required">*</span>
+                        </label>
+                        <select class="form-select" name="zone" required>
+                            <option value="">Select Zone</option>
+                            <option value="KBH-A">KBH-A</option>
+                            <option value="KBH-B">KBH-B</option>
+                            <option value="KIY-A">KIY-A</option>
+                            <option value="KRK-A">KRK-A</option>
+                            <option value="KPZ-A">KPZ-A</option>
+                            <option value="KPZ-B">KPZ-B</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="align-self: flex-end; grid-column: span 2;">
+                        <button type="submit" class="btn btn-success" name="add_staff">
+                            <i class="fas fa-user-plus"></i> Add Staff Member
+                        </button>
+                        <small style="display: block; margin-top: 8px; color: var(--muted); font-size: 12px;">
+                            <i class="fas fa-key"></i> Default password: <strong>default123</strong> (Staff must change on first login)
+                        </small>
+                    </div>
+                </form>
             </div>
-            <form method="GET" action="" class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">Search Staff</label>
-                    <input type="text" class="form-input" name="search" placeholder="Search by ID, Name, or Email" value="<?= htmlspecialchars($search) ?>">
+
+            <!-- Search & Filter -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-filter"></i> Search & Filter Staff
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Filter by Zone</label>
-                    <select class="form-select" name="zone">
-                        <option value="">All Zones</option>
-                        <?php foreach($zones as $zone): ?>
-                            <option value="<?= htmlspecialchars($zone) ?>" <?= $filterZone==$zone?'selected':'' ?>>
-                                <?= htmlspecialchars($zone) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                <form method="GET" action="" class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-search"></i> Search Staff</label>
+                        <input type="text" class="form-input" name="search" placeholder="Search by ID, Name, or Email" value="<?= htmlspecialchars($search) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-map-marker-alt"></i> Filter by Zone</label>
+                        <select class="form-select" name="zone">
+                            <option value="">All Zones</option>
+                            <?php foreach($zones as $zone): ?>
+                                <option value="<?= htmlspecialchars($zone) ?>" <?= $filterZone==$zone?'selected':'' ?>>
+                                    <?= htmlspecialchars($zone) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-user-clock"></i> Filter by Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All Status</option>
+                            <option value="Available" <?= $filterStatus=='Available'?'selected':'' ?>>Available</option>
+                            <option value="Busy" <?= $filterStatus=='Busy'?'selected':'' ?>>Busy</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="align-self: flex-end;">
+                        <button type="submit" class="btn">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <?php if($search || $filterZone || $filterStatus): ?>
+                            <a href="addstaff.php" class="btn" style="margin-left: 10px;">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Staff List -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-list-ul"></i> Cleaning Staff List 
+                    <span style="font-size: 14px; color: var(--muted); margin-left: 10px; font-weight: normal;">
+                        (<?= $totalResult ?> staff found)
+                    </span>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Filter by Status</label>
-                    <select class="form-select" name="status">
-                        <option value="">All Status</option>
-                        <option value="Available" <?= $filterStatus=='Available'?'selected':'' ?>>Available</option>
-                        <option value="Busy" <?= $filterStatus=='Busy'?'selected':'' ?>>Busy</option>
-                    </select>
-                </div>
-                <div class="form-group" style="align-self: flex-end;">
-                    <button type="submit" class="btn">
-                        <i class="fas fa-search"></i> Apply Filters
-                    </button>
-                    <?php if($search || $filterZone || $filterStatus): ?>
-                        <a href="addstaff.php" class="btn" style="margin-left: 10px;">
-                            <i class="fas fa-times"></i> Clear
+                
+                <?php if($staffList->num_rows == 0): ?>
+                    <div class="no-data">
+                        <i class="fas fa-users-slash"></i>
+                        <h3>No Staff Found</h3>
+                        <p>No cleaning staff match your search criteria.</p>
+                        <a href="addstaff.php" class="btn" style="margin-top: 15px;">
+                            <i class="fas fa-plus"></i> Add New Staff
                         </a>
-                    <?php endif; ?>
-                </div>
-            </form>
-        </div>
-
-        <!-- Staff List -->
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-list"></i> Cleaning Staff List 
-                <span style="font-size: 14px; color: var(--muted); margin-left: 10px;">
-                    (<?= $totalResult ?> staff found)
-                </span>
+                    </div>
+                <?php else: ?>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Staff ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Zone</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($row = $staffList->fetch_assoc()): ?>
+                            <tr>
+                                <form method="POST">
+                                    <td>
+                                        <div class="staff-id-display">
+                                            <?= htmlspecialchars($row['ID']) ?>
+                                        </div>
+                                        <input type="hidden" name="staff_id" value="<?= $row['ID'] ?>">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="table-input" name="name" 
+                                               value="<?= htmlspecialchars($row['name']) ?>" required>
+                                    </td>
+                                    <td>
+                                        <input type="email" class="table-input" name="email" 
+                                               value="<?= htmlspecialchars($row['email']) ?>" required>
+                                    </td>
+                                    <td>
+                                        <select class="table-select" name="zone" required>
+                                            <option value="">Select Zone</option>
+                                            <option value="KBH-A" <?= $row['zone']=='KBH-A'?'selected':'' ?>>KBH-A</option>
+                                            <option value="KBH-B" <?= $row['zone']=='KBH-B'?'selected':'' ?>>KBH-B</option>
+                                            <option value="KIY-A" <?= $row['zone']=='KIY-A'?'selected':'' ?>>KIY-A</option>
+                                            <option value="KRK-A" <?= $row['zone']=='KRK-A'?'selected':'' ?>>KRK-A</option>
+                                            <option value="KPZ-A" <?= $row['zone']=='KPZ-A'?'selected':'' ?>>KPZ-A</option>
+                                            <option value="KPZ-B" <?= $row['zone']=='KPZ-B'?'selected':'' ?>>KPZ-B</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="table-select" name="status">
+                                            <option value="Available" <?= $row['status']=='Available'?'selected':'' ?>>Available</option>
+                                            <option value="Busy" <?= $row['status']=='Busy'?'selected':'' ?>>Busy</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button type="submit" class="btn btn-success btn-sm" name="update_staff">
+                                                <i class="fas fa-save"></i> Save
+                                            </button>
+                                            <button type="submit" class="btn btn-danger btn-sm" name="delete_staff" 
+                                                    onclick="return confirm('Are you sure you want to delete this staff member? This action cannot be undone.')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </form>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
             </div>
-            
-            <?php if($staffList->num_rows == 0): ?>
-                <div class="no-data">
-                    <i class="fas fa-users-slash" style="font-size: 48px; margin-bottom: 15px;"></i>
-                    <h3>No Staff Found</h3>
-                    <p>No cleaning staff match your search criteria.</p>
-                </div>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Staff ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Zone</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while($row = $staffList->fetch_assoc()): ?>
-                        <tr>
-                            <form method="POST">
-                                <td>
-                                    <div class="staff-id-display">
-                                        <?= htmlspecialchars($row['ID']) ?>
-                                    </div>
-                                    <input type="hidden" name="staff_id" value="<?= $row['ID'] ?>">
-                                </td>
-                                <td>
-                                    <input type="text" class="table-input" name="name" 
-                                           value="<?= htmlspecialchars($row['name']) ?>" required>
-                                </td>
-                                <td>
-                                    <input type="email" class="table-input" name="email" 
-                                           value="<?= htmlspecialchars($row['email']) ?>" required>
-                                </td>
-                                <td>
-                                    <!-- CHANGED: Text input changed to dropdown for Zone -->
-                                    <select class="table-select" name="zone" required>
-                                        <option value="">Select Zone</option>
-                                        <option value="KBH-A" <?= $row['zone']=='KBH-A'?'selected':'' ?>>KBH-A</option>
-                                        <option value="KBH-B" <?= $row['zone']=='KBH-B'?'selected':'' ?>>KBH-B</option>
-                                        <option value="KIY-A" <?= $row['zone']=='KIY-A'?'selected':'' ?>>KIY-A</option>
-                                        <option value="KRK-A" <?= $row['zone']=='KRK-A'?'selected':'' ?>>KRK-A</option>
-                                        <option value="KPZ-A" <?= $row['zone']=='KPZ-A'?'selected':'' ?>>KPZ-A</option>
-                                        <option value="KPZ-B" <?= $row['zone']=='KPZ-B'?'selected':'' ?>>KPZ-B</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select class="table-select" name="status">
-                                        <option value="Available" <?= $row['status']=='Available'?'selected':'' ?>>Available</option>
-                                        <option value="Busy" <?= $row['status']=='Busy'?'selected':'' ?>>Busy</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button type="submit" class="btn btn-success btn-sm" name="update_staff">
-                                            <i class="fas fa-save"></i> Save
-                                        </button>
-                                        <button type="submit" class="btn btn-danger btn-sm" name="delete_staff">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </td>
-                            </form>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
 
-        <!-- Pagination -->
-        <?php if($totalPages > 1): ?>
-        <div class="pagination">
-            <?php if($page > 1): ?>
-                <a class="page-link" 
-                   href="?page=<?= $page-1 ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
-                    <i class="fas fa-chevron-left"></i> Previous
-                </a>
+            <!-- Pagination -->
+            <?php if($totalPages > 1): ?>
+            <div class="pagination">
+                <?php if($page > 1): ?>
+                    <a class="page-link" 
+                       href="?page=<?= $page-1 ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                <?php endif; ?>
+                
+                <?php 
+                // Show limited pagination links
+                $start = max(1, $page - 2);
+                $end = min($totalPages, $page + 2);
+                
+                for($i = $start; $i <= $end; $i++): ?>
+                    <a class="page-link <?= $i == $page ? 'active' : '' ?>" 
+                       href="?page=<?= $i ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
+                        <?= $i ?>
+                    </a>
+                <?php endfor; ?>
+                
+                <?php if($page < $totalPages): ?>
+                    <a class="page-link" 
+                       href="?page=<?= $page+1 ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
             <?php endif; ?>
-            
-            <?php 
-            // Show limited pagination links
-            $start = max(1, $page - 2);
-            $end = min($totalPages, $page + 2);
-            
-            for($i = $start; $i <= $end; $i++): ?>
-                <a class="page-link <?= $i == $page ? 'active' : '' ?>" 
-                   href="?page=<?= $i ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
-                    <?= $i ?>
-                </a>
-            <?php endfor; ?>
-            
-            <?php if($page < $totalPages): ?>
-                <a class="page-link" 
-                   href="?page=<?= $page+1 ?>&search=<?= htmlspecialchars($search) ?>&zone=<?= htmlspecialchars($filterZone) ?>&status=<?= htmlspecialchars($filterStatus) ?>">
-                    Next <i class="fas fa-chevron-right"></i>
-                </a>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
+        </main>
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Delete confirmation
-        const deleteButtons = document.querySelectorAll('button[name="delete_staff"]');
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to delete this staff member?\nThis action cannot be undone.')) {
-                    e.preventDefault();
-                }
-            });
-        });
-        
         // Form validation for add staff form
         const addStaffForm = document.querySelector('form[method="POST"]');
         if(addStaffForm) {
@@ -1012,3 +1139,11 @@ while($row = $zoneResult->fetch_assoc()) {
                 alert.style.transition = 'opacity 0.5s ease';
                 alert.style.opacity = '0';
                 setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 500);
+            });
+        }, 5000);
+    });
+    </script>
+</body>
+</html>
