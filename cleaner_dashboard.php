@@ -828,7 +828,6 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             </div>
 
             <ul class="nav-links">
-                <li><a href="#notifications-section"><i class="fas fa-bell"></i> Notifications</a></li>
                 <li><a href="#scheduled-tasks-section"><i class="fas fa-tasks"></i> Scheduled Tasks</a></li>
                 <li><a href="#assigned-complaints-section"><i class="fas fa-exclamation-circle"></i> Assigned Complaints</a></li>
                 <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>

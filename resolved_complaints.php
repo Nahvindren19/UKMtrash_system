@@ -487,9 +487,7 @@ $result = $stmt->get_result();
                 <li><a href="student_dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
                 <li><a href="making_complaint.php"><i class="fas fa-plus-circle"></i> Make Complaint</a></li>
                 <li><a href="resolved_complaints.php" class="active"><i class="fas fa-history"></i> Resolved Complaints</a></li>
-                <li><a href="#"><i class="fas fa-chart-bar"></i> Statistics</a></li>
                 <li><a href="student_profile.php"><i class="fas fa-user"></i> Profile</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
                 <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
