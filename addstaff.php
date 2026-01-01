@@ -194,10 +194,10 @@ if(isset($_POST['add_staff'])){
         $conn->query("UNLOCK TABLES");
         $conn->commit();
         
-        $success = "Cleaning Staff added successfully!<br>
-                   Staff ID: <strong>$staffID</strong><br>
-                   Default Password: <strong>default123</strong><br>
-                   Please inform the staff to change their password upon first login.";
+        $success = "Cleaning Staff added successfully!\n\n
+           Staff ID: $staffID\n
+           Default Password: default123\n\n
+           Please inform the staff to change their password upon first login.";
         
         // Update next staff ID for display
         $nextNum++;
@@ -479,7 +479,6 @@ while($row = $zoneResult->fetch_assoc()) {
             border-radius: var(--radius);
             border: 2px solid rgba(127, 196, 155, 0.3);
             font-size: 14px;
-            font-weight: 600;
             color: var(--accent-dark);
             display: flex;
             align-items: center;
@@ -487,15 +486,18 @@ while($row = $zoneResult->fetch_assoc()) {
         }
         
         .id-display .id-value {
-            font-family: monospace;
+            /* CHANGED: Added monospace font for Staff ID */
+            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
             font-size: 15px;
-            letter-spacing: 1px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
         }
         
         .id-display .id-hint {
             font-size: 12px;
             color: var(--muted);
             font-weight: normal;
+            font-family: 'Inter', system-ui, sans-serif;
         }
         
         .btn {
@@ -592,13 +594,15 @@ while($row = $zoneResult->fetch_assoc()) {
             border: 1px solid rgba(127, 196, 155, 0.3);
             border-radius: 8px;
             font-size: 14px;
+            background: white;
         }
         
         .staff-id-display {
-            font-family: monospace;
+            /* CHANGED: Added monospace font for table Staff ID */
+            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
             font-weight: 600;
             color: var(--accent-dark);
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
         
         .action-buttons {
@@ -870,8 +874,16 @@ while($row = $zoneResult->fetch_assoc()) {
                                            value="<?= htmlspecialchars($row['email']) ?>" required>
                                 </td>
                                 <td>
-                                    <input type="text" class="table-input" name="zone" 
-                                           value="<?= htmlspecialchars($row['zone']) ?>" required>
+                                    <!-- CHANGED: Text input changed to dropdown for Zone -->
+                                    <select class="table-select" name="zone" required>
+                                        <option value="">Select Zone</option>
+                                        <option value="KBH-A" <?= $row['zone']=='KBH-A'?'selected':'' ?>>KBH-A</option>
+                                        <option value="KBH-B" <?= $row['zone']=='KBH-B'?'selected':'' ?>>KBH-B</option>
+                                        <option value="KIY-A" <?= $row['zone']=='KIY-A'?'selected':'' ?>>KIY-A</option>
+                                        <option value="KRK-A" <?= $row['zone']=='KRK-A'?'selected':'' ?>>KRK-A</option>
+                                        <option value="KPZ-A" <?= $row['zone']=='KPZ-A'?'selected':'' ?>>KPZ-A</option>
+                                        <option value="KPZ-B" <?= $row['zone']=='KPZ-B'?'selected':'' ?>>KPZ-B</option>
+                                    </select>
                                 </td>
                                 <td>
                                     <select class="table-select" name="status">
@@ -971,7 +983,7 @@ while($row = $zoneResult->fetch_assoc()) {
                 form.addEventListener('submit', function(e) {
                     const name = form.querySelector('input[name="name"]').value.trim();
                     const email = form.querySelector('input[name="email"]').value.trim();
-                    const zone = form.querySelector('input[name="zone"]').value.trim();
+                    const zone = form.querySelector('select[name="zone"]').value;
                     
                     if(!name || !email || !zone) {
                         e.preventDefault();
@@ -1000,27 +1012,3 @@ while($row = $zoneResult->fetch_assoc()) {
                 alert.style.transition = 'opacity 0.5s ease';
                 alert.style.opacity = '0';
                 setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 500);
-            });
-        }, 5000);
-        
-        // Highlight the Staff ID field on page load
-        const staffIdDisplay = document.querySelector('.id-display');
-        if(staffIdDisplay) {
-            // Add a subtle animation to draw attention
-            setTimeout(() => {
-                staffIdDisplay.style.transform = 'scale(1.02)';
-                staffIdDisplay.style.boxShadow = '0 4px 12px rgba(127, 196, 155, 0.2)';
-                staffIdDisplay.style.transition = 'all 0.3s ease';
-                
-                setTimeout(() => {
-                    staffIdDisplay.style.transform = 'scale(1)';
-                    staffIdDisplay.style.boxShadow = 'none';
-                }, 1000);
-            }, 500);
-        }
-    });
-    </script>
-</body>
-</html>

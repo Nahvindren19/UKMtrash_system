@@ -791,4 +791,8 @@ $conn->close();
         }, 300000); // 5 minutes
     </script>
 </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> ceded687f74df698a7226fa644394c0c5e8f1005

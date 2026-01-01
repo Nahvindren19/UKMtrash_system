@@ -1,0 +1,12 @@
+INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`)
+SELECT
+    'A202211',
+    ELT(FLOOR(1 + RAND()*2), 'B121', 'B202'),
+    ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
+    ELT(FLOOR(1 + RAND()*5),
+        'Completed', 'Completed', 'Completed',
+        'Assigned', 'Pending'),
+    DATE_ADD('2025-07-01', INTERVAL FLOOR(RAND()*180) DAY),
+    ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual')
+FROM information_schema.tables
+LIMIT 300;
