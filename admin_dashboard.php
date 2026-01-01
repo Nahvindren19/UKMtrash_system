@@ -116,14 +116,6 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             border-bottom: 1px solid rgba(127, 196, 155, 0.1);
         }
 
-<<<<<<< HEAD
-<div class="dashboard-buttons">
-    <a href="addstaff.php">➕ Add Cleaning Staff</a>
-    <a href="assigntask.php">➕ Assign Tasks</a>
-    <a href="assigned_task_list.php">➕ Manage Tasks</a>
-    <a href="managebin.php">🗑 Manage Bins</a>
-</div>
-=======
         .sidebar-logo {
             width: 50px;
             height: 50px;
@@ -133,7 +125,6 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             padding: 5px;
             box-shadow: var(--shadow-light);
         }
->>>>>>> 0f87ba91973d9ee59038f877d8c30993eb7f5519
 
         .sidebar-title h2 {
             font-size: 18px;
@@ -774,6 +765,7 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             <ul class="nav-links">
                 <li><a href="#dashboard-section" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                 <li><a href="#complaints-section"><i class="fas fa-exclamation-circle"></i> Complaints</a></li>
+                <li><a href="maintenance_analytics.php"><i class="fas fa-chart-line"></i> Analytics</a></li>
                 <li><a href="addstaff.php"><i class="fas fa-user-plus"></i> Add Staff</a></li>
                 <li><a href="assigntask.php"><i class="fas fa-tasks"></i> Manage Tasks</a></li>
                 <li><a href="managebin.php"><i class="fas fa-trash-alt"></i> Manage Bins</a></li>
@@ -840,17 +832,17 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                         </div>
                     </div>
 
-                    <div class="stat-card" onclick="window.location.href='addstaff.php'">
+                    <div class="stat-card" onclick="window.location.href='maintenance_analytics.php'">
                         <div class="stat-icon">
-                            <i class="fas fa-users"></i>
+                            <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>Cleaning Staff</h3>
+                            <h3>Analytics</h3>
                             <div class="value">
-                                <?php echo $staffCount; ?>
+                                View
                             </div>
                             <div class="change">
-                                <i class="fas fa-user-plus"></i> Manage staff
+                                <i class="fas fa-chart-bar"></i> View statistics
                             </div>
                         </div>
                     </div>
@@ -863,6 +855,18 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             </div>
             
             <div class="task-cards" style="margin-bottom: 50px;">
+                <div class="task-card" onclick="window.location.href='maintenance_analytics.php'">
+                    <div class="task-card-header">
+                        <h4><i class="fas fa-chart-line"></i> View Analytics</h4>
+                    </div>
+                    <div class="task-card-content expanded">
+                        <p style="color: var(--muted); margin-bottom: 15px;">View detailed statistics, charts, and insights about complaints and staff performance</p>
+                        <div class="task-actions">
+                            <a href="maintenance_analytics.php" class="btn">View Analytics</a>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="task-card" onclick="window.location.href='addstaff.php'">
                     <div class="task-card-header">
                         <h4><i class="fas fa-user-plus"></i> Add Cleaning Staff</h4>
@@ -883,18 +887,6 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                         <p style="color: var(--muted); margin-bottom: 15px;">Assign and schedule cleaning tasks for staff</p>
                         <div class="task-actions">
                             <a href="assigntask.php" class="btn">Manage Tasks</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="task-card" onclick="window.location.href='managebin.php'">
-                    <div class="task-card-header">
-                        <h4><i class="fas fa-trash-alt"></i> Manage Bins</h4>
-                    </div>
-                    <div class="task-card-content expanded">
-                        <p style="color: var(--muted); margin-bottom: 15px;">Add, edit or remove trash bins from the system</p>
-                        <div class="task-actions">
-                            <a href="managebin.php" class="btn">Manage Bins</a>
                         </div>
                     </div>
                 </div>

@@ -10,9 +10,6 @@ if(!isset($_SESSION['ID']) || $_SESSION['category'] != 'Cleaning Staff'){
 
 $cleanerID = $_SESSION['ID'];
 
-// Fetch assigned tasks
-#<<<<<<< HEAD
-
 
 $tasks = $conn->query("
     SELECT 
@@ -26,13 +23,13 @@ $tasks = $conn->query("
 ");
  
 
+// Fetch assigned tasks (scheduled or pending)
 $tasks = $conn->query("SELECT * FROM task WHERE staffID='$cleanerID' AND status IN ('Scheduled','Pending') ORDER BY taskID DESC");
-
 
 // Fetch assigned complaints (including resolved ones for history)
 $complaints = $conn->query("SELECT * FROM complaint WHERE assigned_to='$cleanerID' ORDER BY complaintID DESC");
 
-// Fetch notifications
+// Fetch notifications for the bell icon
 $stmt = $conn->prepare("SELECT * FROM notifications WHERE userID=? ORDER BY is_read ASC, created_at DESC");
 $stmt->bind_param("s", $cleanerID);
 $stmt->execute();
@@ -61,6 +58,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
     <!-- Font & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         :root {
             --bg: #f6fff7;                /* soft pastel mint */
@@ -203,7 +201,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             min-height: 100vh;
         }
 
-        /* Header Section */
+        /* Header Section - UPDATED to include notification bell */
         .header {
             display: flex;
             justify-content: space-between;
@@ -223,6 +221,90 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         .welcome-section p {
             color: var(--muted);
             font-size: 1.1rem;
+        }
+
+        /* Notification Bell - ADDED from student dashboard */
+        #notificationContainer {
+            position: relative;
+            display: inline-block;
+        }
+
+        #notificationBell {
+            background: var(--card);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--muted);
+            transition: var(--transition);
+            box-shadow: var(--shadow-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #notificationBell:hover {
+            background: rgba(127, 196, 155, 0.08);
+            transform: translateY(-2px);
+        }
+
+        #unreadBellCount {
+            background: #ff4757;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #notificationDropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 10px;
+            background: var(--card);
+            min-width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(127, 196, 155, 0.1);
+            z-index: 1000;
+            padding: 15px;
+        }
+
+        .notificationItem {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            background: rgba(127, 196, 155, 0.05);
+            border-left: 4px solid var(--accent);
+            transition: var(--transition);
+        }
+
+        .notificationItem.unread {
+            background: rgba(127, 196, 155, 0.1);
+            border-left: 4px solid #ff4757;
+        }
+
+        .notificationItem:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .mark-read {
+            color: var(--accent);
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 5px;
+            display: inline-block;
         }
 
         /* Stats Grid */
@@ -673,6 +755,14 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
             th, td {
                 padding: 12px 10px;
             }
+            #notificationDropdown {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-width: 350px;
+            }
         }
 
         /* No data message */
@@ -747,11 +837,25 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Header -->
+            <!-- Header - UPDATED with notification bell -->
             <div class="header">
                 <div class="welcome-section">
                     <h2>Welcome, <?php echo $_SESSION['name']; ?>!</h2>
                     <p>View your assigned tasks and complaints</p>
+                </div>
+                
+                <!-- Notification Bell - ADDED from student dashboard -->
+                <div id="notificationContainer">
+                    <button id="notificationBell">
+                        <i class="fas fa-bell"></i>
+                        <span id="unreadBellCount"><?= $unreadCount ?></span>
+                    </button>
+                    <div id="notificationDropdown">
+                        <!-- Notifications will be loaded here -->
+                        <div class="notificationItem" style="text-align: center; color: var(--muted);">
+                            <i class="fas fa-spinner fa-spin"></i> Loading notifications...
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -793,7 +897,7 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                     </div>
                     <div class="stat-content">
                         <h3>Notifications</h3>
-                        <div class="value"><?= $unreadCount ?></div>
+                        <div class="value" id="unreadCountValue"><?= $unreadCount ?></div>
                         <div class="change">
                             <i class="fas fa-envelope"></i> Unread messages
                         </div>
@@ -824,6 +928,9 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
                         <button class="btn btn-outline" onclick="markAllAsRead()">
                             <i class="fas fa-check-double"></i> Mark All Read
                         </button>
+                        <!--<button class="btn btn-outline" onClick="viewAll()">-->
+                        <!--    <i class="far fa-plus-square"></i> View All-->
+                        <!--</button>-->
                     </div>
                 </div>
                 
@@ -1010,168 +1117,256 @@ $todayTasks = $conn->query("SELECT COUNT(*) as count FROM task WHERE staffID='$c
         </main>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-    // Scroll to section
-    function scrollToSection(sectionId) {
-        const section = document.getElementById(sectionId);
-        if (section) {
-            section.scrollIntoView({ behavior: 'smooth' });
+    $(document).ready(function(){
+        let lastUnread = <?= $unreadCount ?>;
+
+        // Function to fetch notifications for the bell dropdown
+        function fetchBellNotifications(){
+            $.ajax({
+                url: 'fetch_notification.php',
+                dataType: 'json',
+                success: function(data){
+                    let container = $('#notificationDropdown');
+                    container.empty();
+
+                    if(data.notifications.length === 0) {
+                        container.html('<div class="notificationItem" style="text-align: center; color: var(--muted);"><i class="fas fa-bell-slash"></i> No notifications</div>');
+                        return;
+                    }
+
+                    data.notifications.forEach(function(n){
+                        let div = $('<div class="notificationItem"></div>');
+                        div.addClass(n.is_read==0 ? 'unread' : '');
+                        div.attr('data-id', n.id);
+                        div.html('<strong>' + n.message + '</strong><br><small style="color: var(--muted);">' + n.created_at + '</small>');
+
+                        if(n.is_read==0){
+                            let markRead = $('<span class="mark-read">Mark as read</span>');
+                            markRead.click(function(e){
+                                e.stopPropagation();
+                                $.post('mark_read.php', {notificationID: n.id}, function(res){
+                                    if(res.success){
+                                        fetchBellNotifications(); // refresh bell dropdown
+                                        loadNotifications(); // refresh main notifications section
+                                    }
+                                }, 'json');
+                            });
+                            div.append('<br>').append(markRead);
+                        }
+
+                        container.append(div);
+                    });
+
+                    $('#unreadBellCount').text(data.unreadCount);
+                    $('#unreadCountValue').text(data.unreadCount);
+
+                    // Show subtle notification badge animation for new notifications
+                    if(data.unreadCount > lastUnread && lastUnread > 0){
+                        $('#notificationBell').css({
+                            'animation': 'pulse 0.5s'
+                        });
+                        setTimeout(() => {
+                            $('#notificationBell').css('animation', '');
+                        }, 500);
+                    }
+                    lastUnread = data.unreadCount;
+                },
+                error: function() {
+                    $('#notificationDropdown').html('<div class="notificationItem" style="text-align: center; color: var(--muted);"><i class="fas fa-exclamation-triangle"></i> Error loading notifications</div>');
+                }
+            });
         }
-    }
 
-    // Mark notification as read
-    function markAsRead(id){
-        $.post('mark_read.php', {notificationID: id}, function(){
-            loadNotifications();
-        });
-    }
+        // Function to load main notifications section
+        function loadNotifications(){
+            $.getJSON('fetch_notification.php', function(data){
+                const container = $('#notifications');
+                container.empty();
+                $('#unreadCount').text(data.unreadCount);
+                $('#unreadBellCount').text(data.unreadCount);
+                $('#unreadCountValue').text(data.unreadCount);
 
-    // Mark all notifications as read
-    function markAllAsRead(){
-        $.post('mark_all_read.php', {userID: '<?= $cleanerID ?>'}, function(){
-            loadNotifications();
-        });
-    }
-
-    // Load notifications
-    function loadNotifications(){
-        $.getJSON('fetch_notification.php', function(data){
-            const container = $('#notifications');
-            container.empty();
-            $('#unreadCount').text(data.unreadCount);
-
-            if(data.notifications.length === 0) {
-                container.html(`
-                    <div class="no-data">
-                        <i class="fas fa-bell-slash"></i>
-                        <p>No notifications found</p>
-                    </div>
-                `);
-                return;
-            }
-
-            data.notifications.forEach(n => {
-                const notificationClass = n.is_read == 0 ? 'notification unread' : 'notification';
-                const notificationDiv = $(`
-                    <div class="${notificationClass}" data-id="${n.id}">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div>
-                                <strong>${n.message}</strong>
-                                <br>
-                                <small style="color: var(--muted);">${n.created_at}</small>
-                            </div>
-                            ${n.is_read == 0 ? '<span class="mark-read" style="cursor:pointer;color:var(--info-text);text-decoration:underline;font-size:12px;margin-left:10px;">Mark as read</span>' : ''}
+                if(data.notifications.length === 0) {
+                    container.html(`
+                        <div class="no-data">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No notifications found</p>
                         </div>
-                    </div>
-                `);
+                    `);
+                    return;
+                }
 
-                notificationDiv.find('.mark-read').click(function() {
-                    markAsRead(n.id);
+                data.notifications.forEach(n => {
+                    const notificationClass = n.is_read == 0 ? 'notification unread' : 'notification';
+                    const notificationDiv = $(`
+                        <div class="${notificationClass}" data-id="${n.id}">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <strong>${n.message}</strong>
+                                    <br>
+                                    <small style="color: var(--muted);">${n.created_at}</small>
+                                </div>
+                                ${n.is_read == 0 ? '<span class="mark-read" style="cursor:pointer;color:var(--info-text);text-decoration:underline;font-size:12px;margin-left:10px;">Mark as read</span>' : ''}
+                            </div>
+                        </div>
+                    `);
+
+                    notificationDiv.find('.mark-read').click(function() {
+                        markAsRead(n.id);
+                    });
+
+                    container.append(notificationDiv);
                 });
+            });
+        }
 
-                container.append(notificationDiv);
+        // Mark notification as read
+        function markAsRead(id){
+            $.post('mark_read.php', {notificationID: id}, function(){
+                fetchBellNotifications();
+                loadNotifications();
+            });
+        }
+
+        // Mark all notifications as read
+        function markAllAsRead(){
+            $.post('mark_all_read.php', {userID: '<?= $cleanerID ?>'}, function(){
+                fetchBellNotifications();
+                loadNotifications();
+            });
+        }
+
+        // Toggle bell dropdown
+        $('#notificationBell').click(function(){
+            $('#notificationDropdown').toggle();
+        });
+
+        // Close dropdown if clicked outside
+        $(document).click(function(e){
+            if(!$(e.target).closest('#notificationContainer').length){
+                $('#notificationDropdown').hide();
+            }
+        });
+
+        // Scroll to section
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Toggle task card expand/collapse
+        function toggleTaskCard(header) {
+            const card = header.closest('.task-card');
+            const content = card.querySelector('.task-card-content');
+            const icon = header.querySelector('.toggle-icon');
+            
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+
+        // Filter tasks by date
+        function filterTasks(filterType) {
+            const today = '<?= $today ?>';
+            const cards = document.querySelectorAll('.task-card');
+            const filterBtns = document.querySelectorAll('#scheduled-tasks-section .filter-btn');
+            
+            // Update active button
+            filterBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            cards.forEach(card => {
+                const taskDate = card.getAttribute('data-date');
+                let show = true;
+                
+                switch(filterType) {
+                    case 'today':
+                        show = (taskDate === today);
+                        break;
+                    case 'upcoming':
+                        show = (taskDate > today);
+                        break;
+                    case 'all':
+                    default:
+                        show = true;
+                }
+                
+                card.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Filter complaints
+        function filterComplaints(filterType) {
+            const today = '<?= $today ?>';
+            const rows = document.querySelectorAll('.complaint-row');
+            const filterBtns = document.querySelectorAll('#assigned-complaints-section .filter-btn');
+            
+            // Update active button
+            filterBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            rows.forEach(row => {
+                const complaintStatus = row.getAttribute('data-status');
+                const complaintDate = row.getAttribute('data-date');
+                let show = true;
+                
+                switch(filterType) {
+                    case 'active':
+                        show = (complaintStatus === 'Assigned' || complaintStatus === 'In Progress');
+                        break;
+                    case 'today':
+                        show = (complaintDate === today);
+                        break;
+                    case 'all':
+                    default:
+                        show = true;
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Handle sidebar navigation clicks
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#')) {
+                    e.preventDefault();
+                    const sectionId = href.substring(1);
+                    scrollToSection(sectionId);
+                }
             });
         });
-    }
 
-    // Toggle task card expand/collapse
-    function toggleTaskCard(header) {
-        const card = header.closest('.task-card');
-        const content = card.querySelector('.task-card-content');
-        const icon = header.querySelector('.toggle-icon');
+        // Auto-refresh bell notifications every 15s
+        setInterval(fetchBellNotifications, 15000);
         
-        content.classList.toggle('expanded');
-        icon.classList.toggle('expanded');
-    }
-
-    // Filter tasks by date
-    function filterTasks(filterType) {
-        const today = '<?= $today ?>';
-        const cards = document.querySelectorAll('.task-card');
-        const filterBtns = document.querySelectorAll('#scheduled-tasks-section .filter-btn');
-        
-        // Update active button
-        filterBtns.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        cards.forEach(card => {
-            const taskDate = card.getAttribute('data-date');
-            let show = true;
+        // Initialize
+        $(document).ready(function() {
+            // Add click events for existing mark-read buttons
+            $('.mark-read').click(function() {
+                const notificationId = $(this).closest('.notification').data('id');
+                markAsRead(notificationId);
+            });
             
-            switch(filterType) {
-                case 'today':
-                    show = (taskDate === today);
-                    break;
-                case 'upcoming':
-                    show = (taskDate > today);
-                    break;
-                case 'all':
-                default:
-                    show = true;
-            }
-            
-            card.style.display = show ? '' : 'none';
-        });
-    }
-
-    // Filter complaints
-    function filterComplaints(filterType) {
-        const today = '<?= $today ?>';
-        const rows = document.querySelectorAll('.complaint-row');
-        const filterBtns = document.querySelectorAll('#assigned-complaints-section .filter-btn');
-        
-        // Update active button
-        filterBtns.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        rows.forEach(row => {
-            const complaintStatus = row.getAttribute('data-status');
-            const complaintDate = row.getAttribute('data-date');
-            let show = true;
-            
-            switch(filterType) {
-                case 'active':
-                    show = (complaintStatus === 'Assigned' || complaintStatus === 'In Progress');
-                    break;
-                case 'today':
-                    show = (complaintDate === today);
-                    break;
-                case 'all':
-                default:
-                    show = true;
-            }
-            
-            row.style.display = show ? '' : 'none';
-        });
-    }
-
-    // Handle sidebar navigation clicks
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href.startsWith('#')) {
-                e.preventDefault();
-                const sectionId = href.substring(1);
-                scrollToSection(sectionId);
-            }
+            // Load initial notifications
+            fetchBellNotifications();
+            loadNotifications();
         });
     });
 
-    // Auto-refresh notifications every 15s
-    setInterval(loadNotifications, 15000);
-    
-    // Initialize
-    $(document).ready(function() {
-        // Add click events for existing mark-read buttons
-        $('.mark-read').click(function() {
-            const notificationId = $(this).closest('.notification').data('id');
-            markAsRead(notificationId);
-        });
-        
-        // Load initial notifications
-        loadNotifications();
-    });
+    // Add CSS animation for pulse effect
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
     </script>
 </body>
 </html>
