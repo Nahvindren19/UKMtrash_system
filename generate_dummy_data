@@ -3,10 +3,32 @@ SELECT
     'A202211',
     ELT(FLOOR(1 + RAND()*2), 'B121', 'B202'),
     ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
-    ELT(FLOOR(1 + RAND()*5),
-        'Completed', 'Completed', 'Completed',
-        'Assigned', 'Pending'),
-    DATE_ADD('2025-07-01', INTERVAL FLOOR(RAND()*180) DAY),
+    'Completed',
+    DATE_ADD('2025-07-01', INTERVAL FLOOR(RAND()*60) DAY),
     ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual')
 FROM information_schema.tables
-LIMIT 300;
+LIMIT 20;
+
+INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`)
+SELECT
+    'A202211',
+    ELT(FLOOR(1 + RAND()*3), 'B121', 'B202', 'B202'),
+    ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
+    'Completed',
+    DATE_ADD('2025-9-01', INTERVAL FLOOR(RAND()*90) DAY),
+    ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual')
+FROM information_schema.tables
+LIMIT 60;
+
+INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`)
+SELECT
+    'A202211',
+    ELT(FLOOR(1 + RAND()*2), 'B121', 'B202'),
+    ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
+    ELT(FLOOR(1 + RAND()*10),
+        'Completed', 'Completed', 'Completed', 'Completed', 'Completed',
+        'Completed', 'Completed', 'Completed', 'Assigned', 'Pending'),
+    DATE_ADD('2025-12-01', INTERVAL FLOOR(RAND()*31) DAY),
+    ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual')
+FROM information_schema.tables
+LIMIT 10;
