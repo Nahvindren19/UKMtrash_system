@@ -769,6 +769,7 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                 <li><a href="addstaff.php"><i class="fas fa-user-plus"></i> Add Staff</a></li>
                 <li><a href="assigntask.php"><i class="fas fa-tasks"></i> Manage Tasks</a></li>
                 <li><a href="managebin.php"><i class="fas fa-trash-alt"></i> Manage Bins</a></li>
+                <li><a href="admin_taskcompletion.php"><i class="fas fa-trash-alt"></i>Completed Tasks</a></li>
                 <li><a href="index.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
