@@ -1,5 +1,6 @@
 <?php
 // landing.php - Landing page for Efficient Trash Management System
+// Place your UKM logo at: assets/ukmlogo.png (recommended size: 300x300 or similar, transparent PNG)
 ?>
 <!doctype html>
 <html lang="en">
@@ -227,56 +228,6 @@
       font-size: 0.9rem;
       color: var(--muted);
       font-weight: 500;
-    }
-
-    /* Campus Gallery Section */
-    .campus-section {
-      background: linear-gradient(180deg, rgba(168, 217, 184, 0.03), rgba(127, 196, 155, 0.01));
-    }
-
-    .campus-gallery {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 30px;
-      margin-top: 50px;
-    }
-
-    .campus-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: var(--transition);
-      border: 1px solid rgba(160, 200, 170, 0.1);
-    }
-
-    .campus-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 50px rgba(46, 64, 43, 0.12);
-    }
-
-    .campus-image {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .campus-info {
-      padding: 25px;
-    }
-
-    .campus-info h3 {
-      font-size: 1.3rem;
-      margin-bottom: 10px;
-      color: var(--text);
-    }
-
-    .campus-info p {
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin: 0;
     }
 
     /* Features Section */
@@ -584,8 +535,7 @@
         font-size: 2.8rem;
       }
       
-      .features-grid,
-      .campus-gallery {
+      .features-grid {
         grid-template-columns: repeat(2, 1fr);
       }
     }
@@ -599,8 +549,7 @@
         font-size: 1.1rem;
       }
       
-      .features-grid,
-      .campus-gallery {
+      .features-grid {
         grid-template-columns: 1fr;
       }
       
@@ -665,8 +614,8 @@
   <nav class="nav" id="navbar">
     <div class="nav-inner">
       <a class="brand" href="#">
-        <!-- Using UKM logo from Wikipedia -->
-        <img src="https://upload.wikimedia.org/wikipedia/ms/thumb/6/69/Logo_UKM.png/320px-Logo_UKM.png" alt="UKM logo">
+        <!-- Replace the src below with your UKM logo file: assets/ukmlogo.png -->
+        <img src="assets/ukmlogo.png" alt="UKM logo" onerror="this.style.opacity=0.5;this.title='Place assets/ukmlogo.png'">
         <div class="brand-text">
           <h1>Efficient Trash Management</h1>
           <p>Our College, Our Home</p>
@@ -674,7 +623,6 @@
       </a>
       
       <div class="nav-actions">
-        <a class="btn btn-outline" href="#campus">Campus</a>
         <a class="btn btn-outline" href="#features">Features</a>
         <a class="btn btn-outline" href="#how-it-works">How it works</a>
         <a class="btn btn-primary" href="index.php">Log in</a>
@@ -691,7 +639,7 @@
         
         <div class="hero-buttons">
           <a href="index.php" class="btn btn-primary">Get Started Now</a>
-          <a href="#campus" class="btn btn-outline">View Our Campus</a>
+          <a href="#features" class="btn btn-outline">Learn More</a>
         </div>
         
         <div class="hero-stats fade-up stagger-delay-1">
@@ -702,46 +650,6 @@
           <div class="stat">
             <div class="stat-number">> 90%</div>
             <div class="stat-label">Resolution</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Campus Gallery Section -->
-  <section id="campus" class="campus-section">
-    <div class="container">
-      <h2 class="section-title fade-up">Our Beautiful UKM Campus</h2>
-      <p class="section-subtitle fade-up stagger-delay-1">Experience the green, sustainable environment of Universiti Kebangsaan Malaysia</p>
-      
-      <div class="campus-gallery">
-        <div class="campus-card fade-up">
-          <img src="https://assets.bharian.com.my/images/articles/UKM-VIEW_1757322588.jpg" 
-               alt="UKM Campus Aerial View" 
-               class="campus-image">
-          <div class="campus-info">
-            <h3>UKM Aerial View</h3>
-            <p>Beautiful panoramic view of Universiti Kebangsaan Malaysia campus with lush greenery and modern infrastructure.</p>
-          </div>
-        </div>
-        
-        <div class="campus-card fade-up stagger-delay-1">
-          <img src="https://www.ukm.my/portalukm/wp-content/uploads/2022/07/Kiz1-1.jpg" 
-               alt="Kolej Kediaman Za'ba" 
-               class="campus-image">
-          <div class="campus-info">
-            <h3>Kolej Kediaman Za'ba</h3>
-            <p>Modern residential college facilities at UKM, providing comfortable living spaces for students with sustainable waste management systems.</p>
-          </div>
-        </div>
-        
-        <div class="campus-card fade-up stagger-delay-2">
-          <img src="https://www.ukm.my/portalukm/wp-content/uploads/2025/07/MG_1574-2048x1365.jpg" 
-               alt="UKM Green Campus" 
-               class="campus-image">
-          <div class="campus-info">
-            <h3>Sustainable Campus</h3>
-            <p>UKM's commitment to sustainability with green spaces, eco-friendly practices, and efficient waste management solutions.</p>
           </div>
         </div>
       </div>
@@ -849,7 +757,7 @@
         
         <div class="cta-buttons">
           <a href="index.php" class="btn btn-white">Login to System</a>
-          <a href="#campus" class="btn btn-transparent">View Our Campus</a>
+          <a href="#features" class="btn btn-transparent">View Features</a>
         </div>
       </div>
     </div>
@@ -861,7 +769,7 @@
       <div class="footer-content">
         <div class="footer-logo-section">
           <div class="footer-logo">
-            <img src="https://upload.wikimedia.org/wikipedia/ms/thumb/6/69/Logo_UKM.png/320px-Logo_UKM.png" alt="UKM Logo">
+            <img src="assets/ukmlogo.png" alt="UKM Logo">
             <div class="footer-logo-text">
               <h3>Efficient Trash Management</h3>
               <p>Our College, Our Home</p>
@@ -874,7 +782,6 @@
           <div class="footer-column">
             <h4>System</h4>
             <ul>
-              <li><a href="#campus">Campus</a></li>
               <li><a href="#features">Features</a></li>
               <li><a href="#how-it-works">How it works</a></li>
               <li><a href="index.php">Login</a></li>
@@ -884,9 +791,9 @@
           <div class="footer-column">
             <h4>Kolej Kediaman</h4>
             <ul>
-              <li><a href="https://www.ukm.my/portalukm/ms/mengenai-ukm/" target="_blank">About UKM</a></li>
-              <li><a href="https://www.ukm.my/portalukm/kampus/" target="_blank">Campus Life</a></li>
-              <li><a href="https://www.ukm.my/portalukm/kelestarian/" target="_blank">Sustainability</a></li>
+              <li><a href="https://www.ukm.my/portalukm/ms/mengenai-ukm/">About UKM</a></li>
+              <li><a href="#">Campus Life</a></li>
+              <li><a href="#">Sustainability</a></li>
             </ul>
           </div>
           
@@ -967,3 +874,8 @@
             el.classList.add('in-view');
           }
         });
+      }, 300);
+    });
+  </script>
+</body>
+</html>
