@@ -648,12 +648,8 @@
             <div class="stat-label">Monitoring</div>
           </div>
           <div class="stat">
-            <div class="stat-number">99%</div>
-            <div class="stat-label">Satisfaction</div>
-          </div>
-          <div class="stat">
-            <div class="stat-number">50+</div>
-            <div class="stat-label">Clean Areas</div>
+            <div class="stat-number">> 90%</div>
+            <div class="stat-label">Resolution</div>
           </div>
         </div>
       </div>
