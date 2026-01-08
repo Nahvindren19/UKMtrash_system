@@ -598,7 +598,7 @@ $zones = $zone_stmt->get_result();
             </div>
 
             <ul class="nav-links">
-                <li><a href="maintenance_dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="admin_dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                 <li><a href="#complaints-section"><i class="fas fa-exclamation-circle"></i> Complaints</a></li>
                 <li><a href="maintenance_analytics.php"><i class="fas fa-chart-line"></i> Analytics</a></li>
                 <li><a href="addstaff.php"><i class="fas fa-user-plus"></i> Add Staff</a></li>
