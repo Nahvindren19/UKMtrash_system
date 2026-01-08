@@ -290,6 +290,47 @@
       font-size: 1rem;
     }
 
+    /* Gallery Section */
+    .gallery-section {
+      padding: 80px 0;
+      background: linear-gradient(180deg, var(--card), rgba(168, 217, 184, 0.05));
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .gallery-item {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      background: var(--card);
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 50px rgba(46, 64, 43, 0.15);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid rgba(127, 196, 155, 0.1);
+    }
+
+    .gallery-caption {
+      padding: 20px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text);
+    }
+
     /* How It Works Section */
     .how-it-works {
       background: linear-gradient(180deg, rgba(168, 217, 184, 0.05), rgba(127, 196, 155, 0.02));
@@ -538,6 +579,10 @@
       .features-grid {
         grid-template-columns: repeat(2, 1fr);
       }
+      
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 768px) {
@@ -551,6 +596,14 @@
       
       .features-grid {
         grid-template-columns: 1fr;
+      }
+      
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .gallery-item img {
+        height: 200px;
       }
       
       .step {
@@ -709,6 +762,29 @@
           </div>
           <h3>Mobile-Friendly</h3>
           <p>Access all features on any device. Cleaners can check in, students can report, and supervisors can monitor from anywhere.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery Section -->
+  <section id="gallery" class="gallery-section">
+    <div class="container">
+      <h2 class="section-title fade-up">Our Clean Campus</h2>
+      <p class="section-subtitle fade-up stagger-delay-1">See how our efficient trash management system maintains a beautiful campus environment.</p>
+      
+      <div class="gallery-grid fade-up stagger-delay-2">
+        <div class="gallery-item">
+          <img src="images/image 1.jpg" alt="Clean campus area 1" onerror="this.style.display='none';">
+          <div class="gallery-caption">Clean common areas where students study, socialize, and connect.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="images/image 2.jpg" alt="Clean campus area 2" onerror="this.style.display='none';">
+          <div class="gallery-caption">Well-maintained campus areas</div>
+        </div>
+        <div class="gallery-item">
+          <img src="images/image 3.jpg" alt="Clean campus area 3" onerror="this.style.display='none';">
+          <div class="gallery-caption">Pristine student gathering spaces maintained through scheduled cleaning.</div>
         </div>
       </div>
     </div>
