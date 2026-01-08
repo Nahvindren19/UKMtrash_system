@@ -1,5 +1,4 @@
 <?php
-session_start();
 include 'database.php';
 
 $email = $_GET['email'] ?? '';
@@ -18,7 +17,7 @@ if(isset($_POST['verify_code'])){
 
         // ✅ Check expiry
         if(strtotime($user['reset_expiry']) >= time()){
-            header("Location: new_password.php?email=" . urlencode($email));
+            header("Location: new_password.php?email=$email");
             exit();
         } else {
             $error = "Reset code has expired!";
@@ -32,409 +31,271 @@ if(isset($_POST['verify_code'])){
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Verify Code | Trash Management</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
-:root {
-    --bg: #f6fff7;
-    --card: #ffffff;
-    --text: #1f2d1f;
-    --muted: #587165;
-    --accent: #7fc49b;
-    --accent-dark: #5fa87e;
-    --radius-lg: 24px;
-    --shadow: 0 15px 40px rgba(46, 64, 43, 0.12);
-}
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Inter', system-ui;
-    background: linear-gradient(135deg, #f6fff7, #e9f7ef);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-}
-
-/* Login Card */
-.login-container {
-    background: var(--card);
-    width: 420px;
-    padding: 40px;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    text-align: center;
-}
-
-.login-logo {
-    width: 120px;
-    height: auto;
-    margin-bottom: 15px;
-}
-
-.login-container h2 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-    color: var(--text);
-}
-
-.login-container p {
-    color: var(--muted);
-    margin-bottom: 30px;
-}
-
-/* Code Input */
-.code-input-container {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 25px;
-}
-
-.code-input {
-    width: 50px;
-    height: 60px;
-    text-align: center;
-    font-size: 24px;
-    font-weight: 600;
-    border: 2px solid #ddd;
-    border-radius: 12px;
-    background: #f9f9f9;
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-}
-
-.code-input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(127, 196, 155, 0.1);
-    background: white;
-}
-
-.code-input.filled {
-    border-color: var(--accent);
-    background: white;
-}
-
-/* Hidden input for form submission */
-.hidden-code-input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Button */
-.btn-submit {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-    border: none;
-    border-radius: 14px;
-    color: white;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-    margin-top: 10px;
-}
-
-.btn-submit:hover {
-    opacity: 0.95;
-    transform: translateY(-1px);
-    box-shadow: 0 5px 15px rgba(127, 196, 155, 0.3);
-}
-
-.btn-submit:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-/* Links */
-.links {
-    margin-top: 20px;
-    font-size: 13px;
-    color: var(--muted);
-}
-
-.links a {
-    color: var(--accent-dark);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.links a:hover {
-    text-decoration: underline;
-    color: var(--accent);
-}
-
-/* Back Button */
-.btn-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 20px;
-    transition: color 0.2s;
-}
-
-.btn-back:hover {
-    color: var(--accent-dark);
-}
-
-/* Messages */
-.message {
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    font-size: 14px;
-    text-align: left;
-}
-
-.success {
-    background: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
-    border-left: 4px solid #2ecc71;
-}
-
-.error {
-    background: rgba(255, 71, 87, 0.1);
-    color: #ff4757;
-    border-left: 4px solid #ff4757;
-}
-
-/* Email Display */
-.email-display {
-    background: rgba(127, 196, 155, 0.05);
-    border: 1px solid rgba(127, 196, 155, 0.2);
-    border-radius: 12px;
-    padding: 12px 15px;
-    margin-bottom: 25px;
-    font-size: 14px;
-    color: var(--muted);
-}
-
-.email-display strong {
-    color: var(--text);
-}
-
-/* Instructions */
-.instructions {
-    background: rgba(127, 196, 155, 0.05);
-    border: 1px solid rgba(127, 196, 155, 0.2);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 25px;
-    font-size: 13px;
-    color: var(--muted);
-    text-align: left;
-}
-
-.instructions i {
-    color: var(--accent);
-    margin-right: 8px;
-}
-
-/* Timer */
-.timer {
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 20px;
-}
-
-.timer.expired {
-    color: #ff4757;
-}
-
-.timer i {
-    margin-right: 8px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="login-container">
-    <img src="assets/ukmlogo.png" class="login-logo" alt="UKM Logo">
-    <h2>Verify Reset Code</h2>
-    <p>Enter the 6-digit code sent to your email</p>
-
-    <?php if ($error): ?>
-        <div class="message error">
-            <i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($error) ?>
-        </div>
-    <?php endif; ?>
-
-    <div class="email-display">
-        <i class="fas fa-envelope"></i> Code sent to: <strong><?= htmlspecialchars($email) ?></strong>
-    </div>
-
-    <div class="instructions">
-        <p><i class="fas fa-clock"></i> The code expires in 10 minutes. Check your spam folder if you don't see it.</p>
-    </div>
-
-    <form method="POST" id="verifyForm">
-        <!-- Hidden input for actual form submission -->
-        <input type="text" name="code" id="hiddenCode" class="hidden-code-input" required>
-        
-        <!-- Visual 6-digit input -->
-        <div class="code-input-container">
-            <?php for ($i = 0; $i < 6; $i++): ?>
-                <input type="text" 
-                       maxlength="1" 
-                       class="code-input" 
-                       data-index="<?= $i ?>"
-                       oninput="moveToNext(this)"
-                       onkeydown="handleKeyDown(event, <?= $i ?>)"
-                       onpaste="handlePaste(event)">
-            <?php endfor; ?>
-        </div>
-
-        <div class="timer">
-            <i class="fas fa-clock"></i> Code expires in: <span id="countdown">10:00</span>
-        </div>
-
-        <button type="submit" name="verify_code" class="btn-submit" id="submitBtn" disabled>
-            <i class="fas fa-check-circle"></i> Verify Code
-        </button>
-    </form>
-
-    <div class="links">
-        <a href="forgot_password.php" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Email Entry
-        </a>
-        <br><br>
-        <a href="index.php">
-            <i class="fas fa-sign-in-alt"></i> Back to Login
-        </a>
-    </div>
-</div>
-
-<script>
-// Combine individual inputs into one hidden input
-const codeInputs = document.querySelectorAll('.code-input');
-const hiddenInput = document.getElementById('hiddenCode');
-const submitBtn = document.getElementById('submitBtn');
-
-function updateHiddenInput() {
-    let code = '';
-    codeInputs.forEach(input => {
-        code += input.value;
-    });
-    hiddenInput.value = code;
-    
-    // Enable submit button only when all 6 digits are entered
-    submitBtn.disabled = code.length !== 6;
-}
-
-function moveToNext(input) {
-    const index = parseInt(input.dataset.index);
-    
-    // Only allow numbers
-    input.value = input.value.replace(/\D/g, '');
-    
-    updateHiddenInput();
-    
-    if (input.value.length === 1 && index < 5) {
-        codeInputs[index + 1].focus();
-    }
-}
-
-function handleKeyDown(event, index) {
-    if (event.key === 'Backspace' && !codeInputs[index].value && index > 0) {
-        codeInputs[index - 1].focus();
-    }
-}
-
-function handlePaste(event) {
-    event.preventDefault();
-    const pastedData = event.clipboardData.getData('text').replace(/\D/g, '');
-    
-    for (let i = 0; i < Math.min(pastedData.length, 6); i++) {
-        codeInputs[i].value = pastedData[i];
-        codeInputs[i].classList.add('filled');
-    }
-    
-    if (pastedData.length >= 6) {
-        codeInputs[5].focus();
-    } else if (pastedData.length > 0) {
-        codeInputs[pastedData.length].focus();
-    }
-    
-    updateHiddenInput();
-}
-
-// Add focus styling
-codeInputs.forEach(input => {
-    input.addEventListener('focus', function() {
-        this.select();
-    });
-    
-    input.addEventListener('input', function() {
-        if (this.value) {
-            this.classList.add('filled');
-        } else {
-            this.classList.remove('filled');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Reset Code | Trash Management System</title>
+    <!-- Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f6fff7;
+            --card: #ffffff;
+            --text: #1f2d1f;
+            --muted: #587165;
+            --accent: #7fc49b;
+            --accent-2: #a8d9b8;
+            --accent-dark: #5fa87e;
+            --glass: rgba(255,255,255,0.85);
+            --radius: 16px;
+            --radius-lg: 24px;
+            --shadow: 0 10px 40px rgba(46, 64, 43, 0.08);
+            --shadow-light: 0 4px 20px rgba(127, 196, 155, 0.12);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            --error: rgba(255, 71, 87, 0.1);
+            --error-text: #ff4757;
         }
-    });
-});
 
-// Timer countdown (10 minutes)
-let timeLeft = 10 * 60; // 10 minutes in seconds
-const countdownElement = document.getElementById('countdown');
-const timerElement = document.querySelector('.timer');
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-function updateCountdown() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    
-    countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-    if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        countdownElement.textContent = "00:00";
-        timerElement.classList.add('expired');
-        countdownElement.innerHTML = '<span style="color:#ff4757;">Expired!</span>';
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-times-circle"></i> Code Expired';
-    }
-    
-    timeLeft--;
-}
+        body {
+            font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-const timerInterval = setInterval(updateCountdown, 1000);
+        .auth-container {
+            width: 100%;
+            max-width: 480px;
+        }
 
-// Auto-focus first input on page load
-window.addEventListener('load', () => {
-    codeInputs[0].focus();
-});
+        .auth-card {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            border-top: 6px solid var(--accent);
+        }
 
-// Form submission handler
-document.getElementById('verifyForm').addEventListener('submit', function(e) {
-    if (submitBtn.disabled) {
-        e.preventDefault();
-        return false;
-    }
-    
-    // Change button to loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-});
-</script>
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+        }
 
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-logo {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            box-shadow: 0 8px 20px rgba(124, 196, 153, 0.25);
+        }
+
+        .auth-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .auth-header p {
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .error {
+            background: var(--error);
+            color: var(--error-text);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text);
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            font-size: 18px;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 16px 16px 16px 50px;
+            border-radius: 12px;
+            border: 2px solid rgba(127, 196, 155, 0.2);
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            transition: var(--transition);
+            text-align: center;
+            letter-spacing: 8px;
+            font-weight: 600;
+        }
+
+        .input-wrapper input::placeholder {
+            letter-spacing: normal;
+            font-weight: normal;
+            color: var(--muted);
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(127, 196, 155, 0.15);
+            letter-spacing: 8px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+            box-shadow: 0 8px 25px rgba(124, 196, 153, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(124, 196, 153, 0.35);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: 30px 25px;
+            }
+            
+            .auth-header h2 {
+                font-size: 1.5rem;
+            }
+            
+            body {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 25px 20px;
+            }
+            
+            .auth-logo {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2>Verify Reset Code</h2>
+                <p>Enter the 6-digit verification code sent to your email</p>
+            </div>
+
+            <?php if($error): ?>
+                <div class="error">
+                    <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST">
+                <div class="form-group">
+                    <label>6-Digit Verification Code</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-key"></i>
+                        <input type="text" 
+                               name="code" 
+                               placeholder="Enter 6-digit code" 
+                               required 
+                               maxlength="6"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                </div>
+
+                <button type="submit" name="verify_code">
+                    <i class="fas fa-check"></i> Verify Code
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus on input
+        document.querySelector('input[name="code"]').focus();
+        
+        // Format code input
+        document.querySelector('input[name="code"]').addEventListener('keyup', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length > 6) value = value.substring(0, 6);
+            this.value = value;
+        });
+    </script>
 </body>
 </html>
