@@ -222,18 +222,20 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
 
         .stat-card {
             background: var(--card);
-            padding: 25px;
+            padding: 30px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-light);
             transition: var(--transition);
             position: relative;
             overflow: hidden;
             cursor: pointer;
+            border: 2px solid transparent;
         }
 
         .stat-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(127, 196, 155, 0.15);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(127, 196, 155, 0.2);
+            border-color: var(--accent);
         }
 
         .stat-card::before {
@@ -241,7 +243,7 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             position: absolute;
             top: 0;
             left: 0;
-            width: 5px;
+            width: 6px;
             height: 100%;
             background: linear-gradient(to bottom, var(--accent), var(--accent-dark));
         }
@@ -271,17 +273,24 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
 
         .stat-icon {
             position: absolute;
-            right: 25px;
-            top: 25px;
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
+            right: 30px;
+            top: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(127, 196, 155, 0.1);
+            background: rgba(127, 196, 155, 0.15);
             color: var(--accent);
-            font-size: 20px;
+            font-size: 24px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover .stat-icon {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.1);
         }
 
         /* Tasks Section */
@@ -311,52 +320,119 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             gap: 10px;
         }
 
-        /* Button Styles */
+        /* Updated Button Styles - More Distinct and Functional */
         .btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: var(--accent);
+            gap: 10px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
             color: white;
             text-decoration: none;
             border-radius: var(--radius);
-            font-weight: 500;
+            font-weight: 600;
             transition: var(--transition);
             border: none;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
+            box-shadow: 0 6px 20px rgba(124, 196, 153, 0.25);
+            position: relative;
+            overflow: hidden;
         }
 
         .btn:hover {
-            background: var(--accent-dark);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, var(--accent-dark), #4f9e71);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(124, 196, 153, 0.35);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
         }
 
         .btn-outline {
             background: transparent;
             border: 2px solid var(--accent);
             color: var(--accent);
+            box-shadow: 0 4px 15px rgba(127, 196, 155, 0.15);
         }
 
         .btn-outline:hover {
             background: var(--accent);
             color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(127, 196, 155, 0.25);
         }
 
         .btn-success {
-            background: var(--success-text);
+            background: linear-gradient(135deg, var(--success-text), #27ae60);
+            border: 2px solid var(--success-text);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.25);
         }
 
         .btn-success:hover {
-            background: #27ae60;
+            background: linear-gradient(135deg, #27ae60, #219955);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(46, 204, 113, 0.35);
         }
 
-        /* Task Cards */
+        /* Primary Action Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            border: 2px solid #ff7e5f;
+            box-shadow: 0 6px 20px rgba(255, 126, 95, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ff6b4a, #fea766);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 126, 95, 0.35);
+        }
+
+        /* Info Action Buttons */
+        .btn-info {
+            background: linear-gradient(135deg, var(--info-text), #2980b9);
+            border: 2px solid var(--info-text);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #2980b9, #1f6399);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.35);
+        }
+
+        /* Danger Action Buttons */
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error-text), #ff2d43);
+            border: 2px solid var(--error-text);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.25);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ff2d43, #e0243a);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 71, 87, 0.35);
+        }
+
+        /* Warning Action Buttons */
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-text), #e67e22);
+            border: 2px solid var(--warning-text);
+            box-shadow: 0 6px 20px rgba(241, 196, 15, 0.25);
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(241, 196, 15, 0.35);
+        }
+
+        /* Quick Action Cards */
         .task-cards {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+            gap: 25px;
             margin-bottom: 30px;
         }
 
@@ -366,15 +442,17 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             overflow: hidden;
             box-shadow: var(--shadow-light);
             transition: var(--transition);
+            border: 2px solid transparent;
         }
 
         .task-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(127, 196, 155, 0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(127, 196, 155, 0.15);
+            border-color: var(--accent);
         }
 
         .task-card-header {
-            padding: 20px;
+            padding: 25px;
             background: linear-gradient(135deg, var(--accent), var(--accent-dark));
             color: white;
             display: flex;
@@ -385,8 +463,11 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
 
         .task-card-header h4 {
             margin: 0;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .task-card-header .toggle-icon {
@@ -525,38 +606,80 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             color: var(--info-text);
         }
 
-        /* Action Buttons */
+        /* Improved Action Buttons in Table */
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 10px;
         }
 
         .action-btn {
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 8px;
             border: none;
-            font-size: 12px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 90px;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
         }
 
         .action-complete {
-            background: var(--success-text);
+            background: linear-gradient(135deg, var(--success-text), #27ae60);
             color: white;
+            border: 1px solid var(--success-text);
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
         }
 
         .action-complete:hover {
-            background: #27ae60;
+            background: linear-gradient(135deg, #27ae60, #219955);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.3);
         }
 
         .action-view {
-            background: var(--info-text);
+            background: linear-gradient(135deg, var(--info-text), #2980b9);
             color: white;
+            border: 1px solid var(--info-text);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
         }
 
         .action-view:hover {
-            background: #2980b9;
+            background: linear-gradient(135deg, #2980b9, #1f6399);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, var(--error-text), #ff2d43);
+            color: white;
+            border: 1px solid var(--error-text);
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.2);
+        }
+
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #ff2d43, #e0243a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .assign-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: 1px solid #9b59b6;
+            box-shadow: 0 4px 10px rgba(155, 89, 182, 0.2);
+        }
+
+        .assign-btn:hover {
+            background: linear-gradient(135deg, #8e44ad, #7d3c98);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(155, 89, 182, 0.3);
         }
 
         /* Notification styles */
@@ -605,6 +728,104 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Improved Filter Buttons */
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: var(--card);
+            border: 2px solid rgba(127, 196, 155, 0.3);
+            border-radius: 25px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-btn:hover {
+            background: rgba(127, 196, 155, 0.1);
+            color: var(--text);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 6px 15px rgba(124, 196, 153, 0.25);
+        }
+
+        /* Additional maintenance-specific styles */
+        .assign-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .assign-form input, .assign-form select {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(127, 196, 155, 0.3);
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .assign-form input:focus, .assign-form select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(127, 196, 155, 0.1);
+        }
+        
+        .assign-form button {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .assign-form button:hover {
+            background: linear-gradient(135deg, var(--accent-dark), #4f9e71);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(124, 196, 153, 0.25);
+        }
+
+        /* No data message */
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--accent-2);
+        }
+
+        /* Scroll to section */
+        .section-anchor {
+            scroll-margin-top: 30px;
         }
 
         /* Responsive Design */
@@ -661,93 +882,6 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                 padding: 12px 10px;
             }
         }
-
-        /* No data message */
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            color: var(--muted);
-            font-size: 16px;
-        }
-
-        .no-data i {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: var(--accent-2);
-        }
-
-        /* Scroll to section */
-        .section-anchor {
-            scroll-margin-top: 30px;
-        }
-
-        /* Filter buttons */
-        .filter-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            background: var(--card);
-            border: 1px solid rgba(127, 196, 155, 0.2);
-            border-radius: 20px;
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .filter-btn:hover {
-            background: rgba(127, 196, 155, 0.1);
-            color: var(--text);
-        }
-
-        .filter-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-
-        /* Additional maintenance-specific styles */
-        .assign-form {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .assign-form input, .assign-form select {
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(127, 196, 155, 0.3);
-            font-size: 14px;
-        }
-        
-        .assign-form button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: var(--transition);
-        }
-        
-        .assign-form button:hover {
-            background: var(--accent-dark);
-        }
-        
-        .delete-btn {
-            background: var(--error-text);
-            color: white;
-        }
-        
-        .delete-btn:hover {
-            background: #ff2d43;
-        }
     </style>
 </head>
 <body>
@@ -763,7 +897,7 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
             </div>
 
             <ul class="nav-links">
-                <li><a href="#dashboard-section" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#admin_dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                 <li><a href="#complaints-section"><i class="fas fa-exclamation-circle"></i> Complaints</a></li>
                 <li><a href="maintenance_analytics.php"><i class="fas fa-chart-line"></i> Analytics</a></li>
                 <li><a href="addstaff.php"><i class="fas fa-user-plus"></i> Add Staff</a></li>
@@ -858,11 +992,14 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                 <div class="task-card" onclick="window.location.href='maintenance_analytics.php'">
                     <div class="task-card-header">
                         <h4><i class="fas fa-chart-line"></i> View Analytics</h4>
+                        <i class="fas fa-arrow-right toggle-icon"></i>
                     </div>
                     <div class="task-card-content expanded">
-                        <p style="color: var(--muted); margin-bottom: 15px;">View detailed statistics, charts, and insights about complaints and staff performance</p>
+                        <p style="color: var(--muted); margin-bottom: 20px;">View detailed statistics, charts, and insights about complaints and staff performance</p>
                         <div class="task-actions">
-                            <a href="maintenance_analytics.php" class="btn">View Analytics</a>
+                            <a href="maintenance_analytics.php" class="btn btn-info">
+                                <i class="fas fa-chart-bar"></i> View Analytics Dashboard
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -870,11 +1007,14 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                 <div class="task-card" onclick="window.location.href='addstaff.php'">
                     <div class="task-card-header">
                         <h4><i class="fas fa-user-plus"></i> Add Cleaning Staff</h4>
+                        <i class="fas fa-arrow-right toggle-icon"></i>
                     </div>
                     <div class="task-card-content expanded">
-                        <p style="color: var(--muted); margin-bottom: 15px;">Register new cleaning staff members to the system</p>
+                        <p style="color: var(--muted); margin-bottom: 20px;">Register new cleaning staff members to the system</p>
                         <div class="task-actions">
-                            <a href="addstaff.php" class="btn">Add Staff</a>
+                            <a href="addstaff.php" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Add New Staff
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -882,11 +1022,14 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                 <div class="task-card" onclick="window.location.href='assigntask.php'">
                     <div class="task-card-header">
                         <h4><i class="fas fa-tasks"></i> Manage Tasks</h4>
+                        <i class="fas fa-arrow-right toggle-icon"></i>
                     </div>
                     <div class="task-card-content expanded">
-                        <p style="color: var(--muted); margin-bottom: 15px;">Assign and schedule cleaning tasks for staff</p>
+                        <p style="color: var(--muted); margin-bottom: 20px;">Assign and schedule cleaning tasks for staff</p>
                         <div class="task-actions">
-                            <a href="assigntask.php" class="btn">Manage Tasks</a>
+                            <a href="assigntask.php" class="btn btn-success">
+                                <i class="fas fa-tasks"></i> Manage Tasks
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -989,14 +1132,14 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                                             <form method="POST" action="assign_cleaner.php" class="assign-form">
                                                 <input type="hidden" name="complaintID" value="<?= $row['complaintID']; ?>">
                                                 
-                                                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                                                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                                                     <input type="time" name="start_time" required 
-                                                           style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid rgba(127, 196, 155, 0.3); font-size: 12px;">
+                                                           style="flex: 1; padding: 10px 12px; border-radius: 8px; border: 2px solid rgba(127, 196, 155, 0.3); font-size: 13px; font-weight: 500;">
                                                     <input type="time" name="end_time" required 
-                                                           style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid rgba(127, 196, 155, 0.3); font-size: 12px;">
+                                                           style="flex: 1; padding: 10px 12px; border-radius: 8px; border: 2px solid rgba(127, 196, 155, 0.3); font-size: 13px; font-weight: 500;">
                                                 </div>
                                                 
-                                                <select name="cleanerID" required style="padding: 8px; border-radius: 8px; border: 1px solid rgba(127, 196, 155, 0.3); font-size: 12px; margin-bottom: 5px;">
+                                                <select name="cleanerID" required style="padding: 10px 12px; border-radius: 8px; border: 2px solid rgba(127, 196, 155, 0.3); font-size: 13px; font-weight: 500; margin-bottom: 8px;">
                                                     <option value="">Select Cleaner</option>
                                                     <?php
                                                     if($row['zone']){
@@ -1020,22 +1163,22 @@ $staffCount = $conn->query("SELECT COUNT(*) as count FROM cleaningstaff")->fetch
                                                     ?>
                                                 </select>
                                                 
-                                                <button type="submit" class="action-btn action-complete" style="padding: 8px 12px; font-size: 12px;">
-                                                    <i class="fas fa-user-check"></i> Assign
+                                                <button type="submit" class="assign-btn" style="padding: 10px 16px; font-size: 13px; font-weight: 600;">
+                                                    <i class="fas fa-user-check"></i> Assign Task
                                                 </button>
                                             </form>
                                         <?php else: 
                                             echo $row['cleanerName'] ? 
-                                                '<span style="color: var(--text); font-weight: 500;">' . htmlspecialchars($row['cleanerName']) . '</span>' : 
-                                                '<span style="color: var(--muted);">-</span>'; 
+                                                '<span style="color: var(--text); font-weight: 600;">' . htmlspecialchars($row['cleanerName']) . '</span>' : 
+                                                '<span style="color: var(--muted); font-weight: 500;">- Not Assigned -</span>'; 
                                         endif; ?>
                                     </td>
                                     <td>
                                         <div class="action-buttons">
                                             <a href="delete_complaint.php?id=<?= $row['complaintID']; ?>" 
                                                class="action-btn delete-btn"
-                                               onclick="return confirm('Delete this complaint?')">
-                                               <i class="fas fa-trash"></i> Delete
+                                               onclick="return confirm('Delete this complaint? This action cannot be undone.')">
+                                               <i class="fas fa-trash-alt"></i> Delete
                                             </a>
                                         </div>
                                     </td>
