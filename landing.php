@@ -776,7 +776,7 @@
       <div class="gallery-grid fade-up stagger-delay-2">
         <div class="gallery-item">
           <img src="images/image 1.jpg" alt="Clean campus area 1" onerror="this.style.display='none';">
-          <div class="gallery-caption">Clean common areas where students study, socialize, and connect.</div>
+          <div class="gallery-caption">Clean common areas where students study, socialize, and connect</div>
         </div>
         <div class="gallery-item">
           <img src="images/image 2.jpg" alt="Clean campus area 2" onerror="this.style.display='none';">
@@ -784,7 +784,7 @@
         </div>
         <div class="gallery-item">
           <img src="images/image 3.jpg" alt="Clean campus area 3" onerror="this.style.display='none';">
-          <div class="gallery-caption">Pristine student gathering spaces maintained through scheduled cleaning.</div>
+          <div class="gallery-caption">Pristine student gathering spaces maintained through scheduled cleaning</div>
         </div>
       </div>
     </div>
