@@ -1,3 +1,4 @@
+
 INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`, `assigned_to`, `start_time`, `end_time`)
 SELECT
     'A202211',
@@ -15,7 +16,7 @@ SELECT
     'A202211',
     ELT(FLOOR(1 + RAND()*3), 'B121', 'B202', 'B202'),
     ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
-    'Completed',
+    'Resolved',
     DATE_ADD('2025-9-01', INTERVAL FLOOR(RAND()*90) DAY),
     ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual'), 
     'C001', '08:00:00', '08:30:00'
@@ -27,7 +28,7 @@ SELECT
     'A202211',
     ELT(FLOOR(1 + RAND()*2), 'B121', 'B202'),
     ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
-    'Completed',
+    'ed',
     DATE_ADD('2025-12-01', INTERVAL FLOOR(RAND()*31) DAY),
     ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual'), 
     'C001', '08:00:00', '08:30:00'
@@ -42,6 +43,56 @@ SELECT
     ELT(FLOOR(1 + RAND()*10),
         'Completed', 'Completed', 'Completed', 'Completed', 'Completed',
         'Completed', 'Completed', 'Completed', 'Assigned', 'Pending'),
+    DATE_ADD('2026-01-01', INTERVAL FLOOR(RAND()*31) DAY),
+    ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual'), 
+    'C001', '08:00:00', '08:30:00'
+FROM information_schema.tables
+LIMIT 5;
+
+INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`, `assigned_to`, `start_time`, `end_time`)
+SELECT
+    'A202211',
+    ELT(FLOOR(1 + RAND()*2), 'B121', 'B202'),
+    ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
+    'Resolved',
+    DATE_ADD('2025-07-01', INTERVAL FLOOR(RAND()*60) DAY),
+    ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual'), 
+    'C001', '08:00:00', '08:30:00'
+FROM information_schema.tables
+LIMIT 20;
+
+INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`, `assigned_to`, `start_time`, `end_time`)
+SELECT
+    'A202211',
+    ELT(FLOOR(1 + RAND()*3), 'B121', 'B202', 'B202'),
+    ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
+    'Resolved',
+    DATE_ADD('2025-9-01', INTERVAL FLOOR(RAND()*90) DAY),
+    ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual'), 
+    'C001', '08:00:00', '08:30:00'
+FROM information_schema.tables
+LIMIT 60;
+
+INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`, `assigned_to`, `start_time`, `end_time`)
+SELECT
+    'A202211',
+    ELT(FLOOR(1 + RAND()*2), 'B121', 'B202'),
+    ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
+    'Resolved',
+    DATE_ADD('2025-12-01', INTERVAL FLOOR(RAND()*31) DAY),
+    ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual'), 
+    'C001', '08:00:00', '08:30:00'
+FROM information_schema.tables
+LIMIT 10;
+
+INSERT INTO `complaint` (`studentID`, `binNo`, `type`, `status`, `date`, `method`, `assigned_to`, `start_time`, `end_time`)
+SELECT
+    'A202211',
+    ELT(FLOOR(1 + RAND()*2), 'B121', 'B202'),
+    ELT(FLOOR(1 + RAND()*2), 'Full', 'Damaged'),
+    ELT(FLOOR(1 + RAND()*10),
+        'Resolved', 'Resolved', 'Resolved', 'Resolved', 'Resolved',
+        'Resolved', 'Resolved', 'Resolved', 'Assigned', 'Pending'),
     DATE_ADD('2026-01-01', INTERVAL FLOOR(RAND()*31) DAY),
     ELT(FLOOR(1 + RAND()*2), 'QR', 'Manual'), 
     'C001', '08:00:00', '08:30:00'
